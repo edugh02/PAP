@@ -1,0 +1,6 @@
+﻿  Compiling CUDA source file kernel.cu...
+  
+  C:\TODO\UNIVERSIDAD\3\2c\PAP\PL1-Candy>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.0\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.0\include"  -G   --keep-dir x64\Debug  -maxrregcount=0  --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc143.pdb" -o C:\TODO\UNIVERSIDAD\3\2c\PAP\PL1-Candy\x64\Debug\kernel.cu.obj "C:\TODO\UNIVERSIDAD\3\2c\PAP\PL1-Candy\kernel.cu" 
+  kernel.cu
+  tmpxft_00004558_00000000-7_kernel.cudafe1.cpp
+  PL1-Candy.vcxproj -> C:\TODO\UNIVERSIDAD\3\2c\PAP\PL1-Candy\x64\Debug\PL1-Candy.exe
