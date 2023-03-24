@@ -12,7 +12,7 @@
 const int columna;
 */
 int vidas = 5;
-
+ //y filas, x columnas
 
 
 // Esta función genera una semilla aleatoria basada en la hora actual.
@@ -22,45 +22,49 @@ unsigned int generate_seed() {
     return (unsigned int)t % 100000;
 }
 
-__global__ void mover_candy(int* mat, int n, int m, int dir,int cordx,int cordy) {
-    int col = threadIdx.x + blockDim.x * blockIdx.x;
-    int fila = threadIdx.y + blockDim.y * blockIdx.y;
-    int posicion = fila * n + col;
-    int caramelo = cordy * n + cordx;
-    if (posicion == caramelo) {
-        switch (dir) {
-        case 1://Arriba
-            if (cordy != 0) {
-                int temp=mat[caramelo];
-                mat[caramelo] = mat[caramelo - n];
-                mat[caramelo - n] = temp;
-            }
-            break;
-        case 2://Abajo
-            if (cordy != m) {
-                int temp = mat[caramelo];
-                mat[caramelo] = mat[caramelo + n];
-                mat[caramelo + n] = temp;
-            }
-            break;
-        case 3://Derecha
-            if (cordy != n) {
-                int temp = mat[caramelo];
-                mat[caramelo] = mat[caramelo + 1];
-                mat[caramelo + 1] = temp;
-            }
-            break;
-        case 4://Izquierda
-            if (cordy != 0) {
-                int temp = mat[caramelo];
-                mat[caramelo] = mat[caramelo - 1];
-                mat[caramelo - 1] = temp;
-            }
-            break;
-        default:
-            break;
+bool esta_o_no(int* vector, int m, int n, int pos) {
+    for (int i = 0; i < n * m; ++i) {
+        if (vector[i] == pos) {
+            return true;
         }
     }
+    return false;
+}
+
+int primer_vacio(int* vector, int n, int m) {
+    int x = 0;
+    for (int i = 0; i < n * m; ++i) {
+        if (vector[i] == -1) {
+            x = i;
+            i = n * m;
+        }
+    }
+    return x;
+}
+
+
+void ver_candy(int* mat, int n, int m,int cordx,int cordy, int* vector,int elemento) {
+    int caramelo = cordy * n + cordx;
+    printf("\nEl caramelo esta en la posicion: %d\n", caramelo);
+    if ( !esta_o_no(vector,m,n,caramelo)&& mat[caramelo]==elemento) {
+        int pos=primer_vacio(vector,n,m);
+        printf("\nposicion del vector siguiente: %d \n", pos);
+        vector[pos] = caramelo;
+        if (cordy != 0) {
+            ver_candy(mat, n, m, cordx, cordy - 1, vector,elemento);
+        }
+        if (cordy != n) {
+            ver_candy(mat, n, m, cordx, cordy + 1, vector,elemento);
+        }
+        if (cordx != 0) {
+            ver_candy(mat, n, m, cordx - 1, cordy, vector,elemento);
+        }
+        if (cordx != m) {
+            ver_candy(mat, n, m, cordx + 1, cordy, vector,elemento);
+        }
+        
+    }
+    
     
 }
 
@@ -82,6 +86,30 @@ __global__ void random_matrix(int* mat, int n, int m, int lim_inf, int lim_sup, 
 }
 
 
+__global__ void fill(int* vec, int n) {
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+    if (i < n) {
+        vec[i] = -1;
+    }
+}
+
+void crear_vector(int* posicionesVistas, int n, int m) {
+    int* d_v;
+    cudaMalloc(&d_v, n * m * sizeof(int));
+
+    // Definir la configuración del kernel
+    int threadsPerBlock = 256;
+    int blocksPerGrid = (n * m + threadsPerBlock - 1) / threadsPerBlock;
+
+    // Llamar al kernel
+    fill << <blocksPerGrid, threadsPerBlock >> > (d_v, n * m);
+
+    cudaMemcpy(posicionesVistas, d_v, n * m * sizeof(int), cudaMemcpyDeviceToHost);
+    cudaFree(d_v);
+}
+
+
+
 void create_random_matrix(int* mat, int n, int m, int lim_inf, int lim_sup) {
     int* d_mat;
     cudaMalloc(&d_mat, n * m * sizeof(int));
@@ -94,7 +122,7 @@ void create_random_matrix(int* mat, int n, int m, int lim_inf, int lim_sup) {
     dim3 block_size(32, 32);
     dim3 num_blocks((n + block_size.x - 1) / block_size.x, (m + block_size.y - 1) / block_size.y);
     random_matrix << <num_blocks, block_size >> > (d_mat, n, m, lim_inf, lim_sup, ale, d_state);
-
+    
     cudaMemcpy(mat, d_mat, n * m * sizeof(int), cudaMemcpyDeviceToHost);
 
     cudaFree(d_mat);
@@ -114,12 +142,11 @@ void imprimir(int* matriz, int n, int m) {
 
 
 int generarNumAleatorio(int hasta) {
-    
-    
     srand(generate_seed());
     int ale = rand() % (hasta + 1);
     return ale;
 }
+
 
 int main()
 {
@@ -137,6 +164,7 @@ int main()
     scanf("%d", &n);
     printf("Introduce el numero de columnas que quieres que tenga el tablero: \n");
     scanf("%d", &m);
+
     int lim_inf = 1; // valor mínimo
     int lim_sup = 6; // valor máximo
     if (dificultad == 1) {
@@ -144,7 +172,8 @@ int main()
     }
     
     int* mat = (int*)malloc(n * m * sizeof(int)); // matriz aleatoria
-
+    int* posicionesVistas = (int*)malloc(n * m * sizeof(int)); 
+    crear_vector(posicionesVistas, n, m);
     create_random_matrix(mat, n, m, lim_inf, lim_sup);
 
 
@@ -164,8 +193,6 @@ int main()
                 scanf("%d", &cordx);
                 printf("Introduce la cordenada Y del caramelo que quieres mover\n");
                 scanf("%d", &cordy);
-                printf("Introduce la dirección hacia la que quieres mover el caramelo deseado: \n 1 Arriba\n 2 Abajo\n 3 Derecha \n 4 Izquierda\n");
-                scanf("%d", &dir);
 
             }
             else {                                                              //ESTA MIERDA ESTA MAL, REVISAR A VER COMO SERÍA
@@ -173,22 +200,19 @@ int main()
                 cordx = generarNumAleatorio(n);
                 srand(time(NULL));
                 cordy = generarNumAleatorio(m);
-                srand(time(NULL));
-                dir = generarNumAleatorio(4) + 1;
                 printf("%d\n", cordx);
                 printf("%d\n", cordy);
-                printf("%d\n\n", dir);
             }
-        } while (cordx > n && cordy > m && cordx < 0 && cordy < 0 && 0 > dir && dir > 5);
+        } while (cordx > n && cordy > m && cordx < 0 && cordy < 0);
+        
 
-        int* d_mat;
-        cudaMalloc(&d_mat, n * m * sizeof(int));
-        cudaMemcpy(d_mat, mat, n * m * sizeof(int), cudaMemcpyHostToDevice);
 
-        mover_candy << <dimGrid, dimBlock >> > (d_mat, n, m, dir, cordx, cordy);
-
-        cudaMemcpy(mat, d_mat, n * m * sizeof(int), cudaMemcpyDeviceToHost);
-        cudaFree(d_mat);
+        int elemento = mat[cordx * n + cordy];
+        ver_candy(mat, n, m, cordx, cordy, posicionesVistas,elemento);
+        for (int i = 0; i < n * m; ++i) {
+            printf("%d ", posicionesVistas[i]);
+        }
+        printf("\n");
 
         vidas -= 1;
     }
