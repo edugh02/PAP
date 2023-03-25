@@ -128,7 +128,7 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector) { //NO SE SI AQU
     cudaMemcpy(d_vector, vector, tamVector * sizeof(int), cudaMemcpyHostToDevice);
 
     // Definir la configuración del kernel
-    dim3 blockSize(1, 1);
+    dim3 blockSize(16, 16);
     dim3 gridSize((n + blockSize.x - 1) / blockSize.x, (m + blockSize.y - 1) / blockSize.y);
 
     // Llamar al kernel
@@ -141,6 +141,47 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector) { //NO SE SI AQU
     // Liberar la memoria de la GPU
     cudaFree(d_matriz);
     cudaFree(d_vector);
+}
+
+
+__global__ void caer_caramelos(int* matriz, int n, int m) {
+    // Calcular las coordenadas x e y del hilo
+    int idx = threadIdx.x + blockDim.x * blockIdx.x;
+    int idy = threadIdx.y + blockDim.y * blockIdx.y;
+    int pos = idx * m + idy;
+    int aux;
+
+    if (matriz[pos] == -1) {
+        for (int i = idy; i > 0; --i) {
+            printf("%d \n",i);
+            aux = matriz[idx * m + i - 1];
+            matriz[idx * m + i - 1] = matriz[idx * m + i];
+            matriz[idx * m + i] = aux;
+        }
+    }
+}
+
+
+
+void caer_caramelos_host(int* matriz, int n, int m) {
+    int size = n * m * sizeof(int);
+    int* d_matriz;
+
+    cudaMalloc(&d_matriz, size);
+    cudaMemcpy(d_matriz, matriz, size, cudaMemcpyHostToDevice);
+
+    // Configurar la cantidad de hilos por bloque y la cantidad de bloques por cuadrícula
+    dim3 tamBloque(16, 16);
+    dim3 tamCuadricula((n + tamBloque.x - 1) / tamBloque.x, (m + tamBloque.y - 1) / tamBloque.y);
+
+    // Llamar al kernel caer_caramelos
+    caer_caramelos << <tamCuadricula, tamBloque >> > (d_matriz, n, m);
+
+    // Copiar la matriz resultante de la GPU al host
+    cudaMemcpy(matriz, d_matriz, size, cudaMemcpyDeviceToHost);
+
+    // Liberar memoria de la GPU
+    cudaFree(d_matriz);
 }
 
 
@@ -190,9 +231,11 @@ void create_random_matrix(int* mat, int n, int m, int lim_inf, int lim_sup) {
 
 
 void imprimir(int* matriz, int n, int m) {
+    printf("\n");
+
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < m; j++) {
-            printf("%d ", matriz[i * m + j]);
+            printf("%d  ", matriz[i * m + j]);
         }
         printf("\n");
     }
@@ -274,6 +317,7 @@ int main()
         printf("\n");
 
         eliminar_elementos(mat, n, m, posicionesVistas);
+        caer_caramelos_host(mat, n, m);
 
         vidas -= 1;
     }
