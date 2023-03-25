@@ -5,10 +5,8 @@ C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(151): warning #177-D: variable "
   
   Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
   
-C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(153): warning #550-D: variable "aux" was set but never used
-  
   kernel.cu
-  tmpxft_00004e08_00000000-7_kernel.cudafe1.cpp
-C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(303): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
-C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(305): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
+  tmpxft_0000324c_00000000-7_kernel.cudafe1.cpp
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(307): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(309): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
   PL1 CANDY.vcxproj -> C:\TODO\GitHub archivos\PAP\PL1 CANDY\x64\Debug\PL1 CANDY.exe

@@ -153,16 +153,20 @@ __global__ void caer_caramelos(int* matriz, int n, int m) {
     int aux;
 
 
-    for (int i = idy; i < n; i++) {
-        int elem_actual = i * m + idy;
-        if (elem_actual == -1)contador++;
+    for (int i = idy; i < n; ++i) {
+        int elem_actual = i * m + idx;
+        if (matriz[elem_actual] == -1){
+            contador++;
+        }
     }
-    if (idy == 0) {
-        aux=
-        matriz[idy * m + idx + (idx * contador)] = 4;
+
+    for (int j = 0; j <= idy; ++j) {
+        if (contador > 0&&matriz[j*m+idx]!=-1) {
+            aux = matriz[(j + contador) * m + idx];
+            matriz[(j + contador) * m + idx] = matriz[j * m + idx];
+            matriz[j * m + idx] = -1;
+        }
     }
-    
-    
 }
 
 
