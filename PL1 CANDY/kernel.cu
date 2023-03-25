@@ -12,7 +12,7 @@
 const int columna;
 */
 int vidas = 5;
- //y filas, x columnas
+ //y filas, x columnas --> idy*columnas + idx ( idx es todos los .x)
 
 
 // Esta función genera una semilla aleatoria basada en la hora actual.
@@ -79,13 +79,13 @@ __global__ void random_matrix(int* mat, int n, int m, int lim_inf, int lim_sup, 
     int idy = threadIdx.y + blockDim.y * blockIdx.y;
 
     // Verificar si el hilo se encuentra dentro de los límites de la matriz
-    if (idx < n && idy < m) {
+    if (idx < m && idy < n) {
         // Inicializar el generador de números aleatorios
-        curand_init(ale, idx * m + idy, 0, &state[idx * m + idy]);
+        curand_init(ale, idy * m + idx, 0, &state[idy * m + idx]);
         // Generar un número aleatorio entero entre "lim_inf" y "lim_sup"
-        int val = curand(&state[idx * m + idy]) % lim_sup + lim_inf;
+        int val = curand(&state[idy * m + idx]) % lim_sup + lim_inf;
         // Asignar el valor aleatorio a la matriz
-        mat[idx * m + idy] = val;
+        mat[idy * m + idx] = val;
     }
 }
 
@@ -99,7 +99,7 @@ __global__ void eliminar_iguales_juntos(int* mat, int n, int m,int* vector) {
     int pos;
 
     for (int i = 0; i < n * m; i++) {
-        if (vector[i] == idx * m + idy) {
+        if (vector[i] == idy * m + idx) {
             centinela = true; // El número está presente en el vector
             pos = i;
         } 
@@ -107,7 +107,7 @@ __global__ void eliminar_iguales_juntos(int* mat, int n, int m,int* vector) {
 
     // Verificar si el hilo se encuentra dentro de los límites de la matriz y coincide con una posición que hay que eliminar
     if (centinela) {
-        mat[idx * m + idy] = -1;
+        mat[idy * m + idx] = -1;
         vector[pos] = -1;
     }
 }
@@ -148,17 +148,21 @@ __global__ void caer_caramelos(int* matriz, int n, int m) {
     // Calcular las coordenadas x e y del hilo
     int idx = threadIdx.x + blockDim.x * blockIdx.x;
     int idy = threadIdx.y + blockDim.y * blockIdx.y;
-    int pos = idx * m + idy;
+    int pos = idy * m + idx;
+    int contador = 0;
     int aux;
 
-    if (matriz[pos] == -1) {
-        for (int i = idy; i > 0; --i) {
-            printf("%d \n",i);
-            aux = matriz[idx * m + i - 1];
-            matriz[idx * m + i - 1] = matriz[idx * m + i];
-            matriz[idx * m + i] = aux;
-        }
+
+    for (int i = idy; i < n; i++) {
+        int elem_actual = i * m + idy;
+        if (elem_actual == -1)contador++;
     }
+    if (idy == 0) {
+        aux=
+        matriz[idy * m + idx + (idx * contador)] = 4;
+    }
+    
+    
 }
 
 
@@ -284,7 +288,6 @@ int main()
 
     int colum=-1;
     int fila=-1;
-    int dir=-1;
 
     while (vidas > 0) {
         imprimir(mat, n, m);
@@ -317,6 +320,9 @@ int main()
         printf("\n");
 
         eliminar_elementos(mat, n, m, posicionesVistas);
+        printf("\n\n");
+        imprimir(mat,n,m);
+        printf("\n\n");
         caer_caramelos_host(mat, n, m);
 
         vidas -= 1;
