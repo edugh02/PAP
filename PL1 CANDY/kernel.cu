@@ -45,10 +45,10 @@ int primer_vacio(int* vector, int n, int m) {
 
 void ver_candy(int* mat, int n, int m,int colum,int fila, int* vector,int elemento) {
     int caramelo = fila * m + colum;
-    printf("\nEl caramelo esta en la posicion: %d\n", caramelo);
-    printf("Está en el vector ya? %d\n",esta_en_vector(vector, m, n, caramelo));
-    printf("El elemento es igual? %d\n", mat[caramelo] == elemento);
-    printf("Elemento dentro %d \n", mat[caramelo]);
+    //printf("\nEl caramelo esta en la posicion: %d\n", caramelo);
+    //printf("Está en el vector ya? %d\n",esta_en_vector(vector, m, n, caramelo));
+    //printf("El elemento es igual? %d\n", mat[caramelo] == elemento);
+    //printf("Elemento dentro %d \n", mat[caramelo]);
 
     if ( !esta_en_vector(vector,m,n,caramelo)&& mat[caramelo]==elemento) {
         int pos=primer_vacio(vector,n,m);
@@ -96,21 +96,19 @@ __global__ void eliminar_iguales_juntos(int* mat, int n, int m,int* vector) {
     int idx = threadIdx.x + blockDim.x * blockIdx.x;
     int idy = threadIdx.y + blockDim.y * blockIdx.y;
     bool centinela = false;
+    int pos;
 
     for (int i = 0; i < n * m; i++) {
-
         if (vector[i] == idx * m + idy) {
-            centinela = true;; // El número está presente en el vector
-        }
+            centinela = true; // El número está presente en el vector
+            pos = i;
+        } 
+    }
 
-        // Verificar si el hilo se encuentra dentro de los límites de la matriz y coincide con una posición que hay que eliminar
-        if (idx < n && idy < m && centinela) {
-            printf("idx %d \n", idx);
-            printf("idy %d \n", idy);
-            printf("vector i %d \n", vector[i]);
-            printf("idx*m+idy %d \n\n\n", idx * n + idy);
-            mat[idx * m + idy] = -1;
-        }
+    // Verificar si el hilo se encuentra dentro de los límites de la matriz y coincide con una posición que hay que eliminar
+    if (centinela) {
+        mat[idx * m + idy] = -1;
+        vector[pos] = -1;
     }
 }
 
@@ -119,7 +117,7 @@ __global__ void eliminar_iguales_juntos(int* mat, int n, int m,int* vector) {
 void eliminar_elementos(int* matriz, int n, int m, int* vector) { //NO SE SI AQUI TMBN TENEMOS QUE ELIMINAR EL ELEMENTO DEL VECTOR DE POSICIONES 
     int* d_matriz;
     int* d_vector;
-    int tamVector = sizeof(d_vector) / sizeof(int);
+    int tamVector = n*m;
 
     // Alocar memoria para la matriz y el vector en la GPU
     cudaMalloc(&d_matriz, n * m * sizeof(int));
@@ -130,7 +128,7 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector) { //NO SE SI AQU
     cudaMemcpy(d_vector, vector, tamVector * sizeof(int), cudaMemcpyHostToDevice);
 
     // Definir la configuración del kernel
-    dim3 blockSize(16, 16);
+    dim3 blockSize(1, 1);
     dim3 gridSize((n + blockSize.x - 1) / blockSize.x, (m + blockSize.y - 1) / blockSize.y);
 
     // Llamar al kernel
@@ -138,7 +136,8 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector) { //NO SE SI AQU
 
     // Copiar la matriz resultante de la GPU a la CPU
     cudaMemcpy(matriz, d_matriz, n * m * sizeof(int), cudaMemcpyDeviceToHost);
-
+    cudaMemcpy(vector, d_vector, n * m * sizeof(int), cudaMemcpyDeviceToHost);
+    
     // Liberar la memoria de la GPU
     cudaFree(d_matriz);
     cudaFree(d_vector);
@@ -274,7 +273,7 @@ int main()
         }
         printf("\n");
 
-        //eliminar_elementos(mat, n, m, posicionesVistas);
+        eliminar_elementos(mat, n, m, posicionesVistas);
 
         vidas -= 1;
     }
