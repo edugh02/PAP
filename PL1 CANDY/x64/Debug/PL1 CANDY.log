@@ -1,7 +1,23 @@
 ﻿  Compiling CUDA source file kernel.cu...
   
   C:\TODO\GitHub archivos\PAP\PL1 CANDY>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.0\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.0\include"  -G   --keep-dir x64\Debug  -maxrregcount=0  --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc143.pdb" -o "C:\TODO\GitHub archivos\PAP\PL1 CANDY\x64\Debug\kernel.cu.obj" "C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu" 
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(150): warning #549-D: variable "pos" is used before its value is set
+  
+  Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(176): warning #549-D: variable "pos" is used before its value is set
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(219): warning #549-D: variable "pos" is used before its value is set
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(150): warning #549-D: variable "pos" is used before its value is set
+  
+  Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(176): warning #549-D: variable "pos" is used before its value is set
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(219): warning #549-D: variable "pos" is used before its value is set
+  
   kernel.cu
-  tmpxft_00005e3c_00000000-7_kernel.cudafe1.cpp
-C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(288): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
+  tmpxft_000027dc_00000000-7_kernel.cudafe1.cpp
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(455): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
   PL1 CANDY.vcxproj -> C:\TODO\GitHub archivos\PAP\PL1 CANDY\x64\Debug\PL1 CANDY.exe

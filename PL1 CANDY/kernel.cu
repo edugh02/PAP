@@ -72,6 +72,16 @@ void ver_candy(int* mat, int n, int m,int colum,int fila, int* vector,int elemen
     
 }
 
+int cuantas_posiciones(int* vector, int n, int m) {
+    int contador = 0;
+    for (int i = 0; i < n * m; ++i) {
+        if (vector[i] != -1) {
+            ++contador;
+        }
+    }
+    return contador;
+}
+
 // Esta función genera una matriz aleatoria de números enteros entre "lim_inf" y "lim_sup".
 __global__ void random_matrix(int* mat, int n, int m, int lim_inf, int lim_sup, unsigned int ale, curandState* state) {
     // Calcular las coordenadas x e y del hilo
@@ -128,9 +138,102 @@ __global__ void eliminar_iguales_juntos(int* mat, int n, int m,int* vector) {
         vector[pos] = -1;
     }
 }
+__global__ void eliminar5(int* mat, int n, int m, int* vector,int fila,int columna) {
+    // Calcular las coordenadas x e y del hilo
+    int idx = threadIdx.x + blockDim.x * blockIdx.x;
+    int idy = threadIdx.y + blockDim.y * blockIdx.y;
+    bool centinela = false;
+    int pos;
 
+    if (vector[0] != -1) {
+        mat[fila * m + columna] = 7;
+        vector[pos] = -1;
+    }
 
-void eliminar_elementos(int* matriz, int n, int m, int* vector) { //NO SE SI AQUI TMBN TENEMOS QUE ELIMINAR EL ELEMENTO DEL VECTOR DE POSICIONES 
+    for (int i = 0; i < n * m; i++) {
+        if (vector[i] == idy * m + idx) {
+            centinela = true; // El número está presente en el vector
+            pos = i;
+        }
+    }
+
+    // Verificar si el hilo se encuentra dentro de los límites de la matriz y coincide con una posición que hay que eliminar
+    if (centinela) {
+        mat[idy * m + idx] = -1;
+        vector[pos] = -1;
+    }
+}
+
+__global__ void eliminar6(int* mat, int n, int m, int* vector,int fila,int columna) {
+    // Calcular las coordenadas x e y del hilo
+    int idx = threadIdx.x + blockDim.x * blockIdx.x;
+    int idy = threadIdx.y + blockDim.y * blockIdx.y;
+    bool centinela = false;
+    int pos;
+
+    if (vector[0] != -1) {
+        mat[fila * m + columna] = 8;
+        vector[pos] = -1;
+    }
+
+    for (int i = 0; i < n * m; i++) {
+        if (vector[i] == idy * m + idx) {
+            centinela = true; // El número está presente en el vector
+            pos = i;
+        }
+    }
+
+    // Verificar si el hilo se encuentra dentro de los límites de la matriz y coincide con una posición que hay que eliminar
+    if (centinela) {
+        mat[idy * m + idx] = -1;
+        vector[pos] = -1;
+    }
+}
+
+__global__ void eliminar7oMas(int* mat, int n, int m, int* vector,int fila,int columna) {
+    // Calcular las coordenadas x e y del hilo
+    int idx = threadIdx.x + blockDim.x * blockIdx.x;
+    int idy = threadIdx.y + blockDim.y * blockIdx.y;
+    bool centinela = false;
+    int pos;
+
+    if (vector[0] != -1) {  //9-->R1 10-->R2 11-->R3 21-->R4 13-->R5 14-->R6
+        if (mat[vector[0]] == 1) {
+            mat[fila * m + columna] = 9;
+        }
+        else if (mat[vector[0]] == 2) {
+            mat[fila * m + columna] = 10;
+        }
+        else if (mat[vector[0]] == 3) {
+            mat[fila * m + columna] = 11;
+        }
+        else if (mat[vector[0]] == 4) {
+            mat[fila * m + columna] = 12;
+        }
+        else if (mat[vector[0]] == 5) {
+            mat[fila * m + columna] = 13;
+        }
+        else {
+            mat[fila * m + columna] = 14;
+        }
+        vector[pos] = -1;
+    }
+
+    for (int i = 0; i < n * m; i++) {
+        if (vector[i] == idy * m + idx) {
+            centinela = true; // El número está presente en el vector
+            pos = i;
+        }
+    }
+
+    // Verificar si el hilo se encuentra dentro de los límites de la matriz y coincide con una posición que hay que eliminar
+    if (centinela) {
+        mat[idy * m + idx] = -1;
+        vector[pos] = -1;
+    }
+}
+
+void eliminar_elementos(int* matriz, int n, int m, int* vector,int fila,int columna) { 
     int* d_matriz;
     int* d_vector;
     int tamVector = n*m;
@@ -148,7 +251,45 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector) { //NO SE SI AQU
     dim3 gridSize((n + blockSize.x - 1) / blockSize.x, (m + blockSize.y - 1) / blockSize.y);
 
     // Llamar al kernel
-    eliminar_iguales_juntos << <gridSize, blockSize >> > (d_matriz, n, m, d_vector);
+    switch (cuantas_posiciones(vector, n, m)){
+    case 1: //TENEMOS QUE ACORDARNOS DE BORRAR LA PRIMERA POSICION DEL VECTOR, QUE SE HABRÁ RELLENADO
+        if (matriz[vector[0]] == 1 || matriz[vector[0]] == 2 || matriz[vector[0]] == 3 || matriz[vector[0]] == 4 || matriz[vector[0]] == 5 || matriz[vector[0]] == 6) {
+            --vidas;
+        }
+        else if (matriz[vector[0]] == 7) {
+            //BOMBA
+        }
+        else if (matriz[vector[0]] == 8) {
+            //TNT
+        }
+        else {
+            //Rx
+        }
+        vector[0] = -1;
+        break;
+    case 2:
+        eliminar_iguales_juntos << <gridSize, blockSize >> > (d_matriz, n, m, d_vector);
+        break;
+    case 3:
+        eliminar_iguales_juntos << <gridSize, blockSize >> > (d_matriz, n, m, d_vector);
+        break;
+    case 4:
+        eliminar_iguales_juntos << <gridSize, blockSize >> > (d_matriz, n, m, d_vector);
+        break;
+    case 5:
+        //Kernel sustituir el elemento de la posición por un B y borrar el resto
+        eliminar5 << <gridSize, blockSize >> > (d_matriz, n, m, d_vector,fila,columna);
+        break;
+    case 6:
+        //Kernel sustituir el elemento de la posición por un TNT y borrar el resto
+        eliminar6 << <gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna);
+        break;
+    default:
+        //Kernel sustituir el elemento de la posición por un Rx y borrar el resto
+        eliminar7oMas<< <gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna);
+        break;
+    }
+    
 
     // Copiar la matriz resultante de la GPU a la CPU
     cudaMemcpy(matriz, d_matriz, n * m * sizeof(int), cudaMemcpyDeviceToHost);
@@ -158,6 +299,7 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector) { //NO SE SI AQU
     cudaFree(d_matriz);
     cudaFree(d_vector);
 }
+
 
 
 __global__  void caer_caramelos(int* matriz, int n, int m) {
@@ -276,7 +418,32 @@ void imprimir(int* matriz, int n, int m) {
 
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < m; j++) {
-            printf("%d  ", matriz[i * m + j]);
+            if (matriz[i * m + j]==7) {
+                printf("B   ");
+            }else if (matriz[i * m + j] == 8) {
+                printf("T   ");
+            }
+            else if (matriz[i * m + j] == 9) {
+                printf("R1  ");
+            }
+            else if (matriz[i * m + j] == 10) {
+                printf("R2  ");
+            }
+            else if (matriz[i * m + j] == 11) {
+                printf("R3  ");
+            }
+            else if (matriz[i * m + j] == 12) {
+                printf("R4  ");
+            }
+            else if (matriz[i * m + j] == 13) {
+                printf("R5  ");
+            }
+            else if (matriz[i * m + j] == 14) {
+                printf("R6  ");
+            }
+            else {
+                printf("%d   ", matriz[i * m + j]);
+            }
         }
         printf("\n");
     }
@@ -303,7 +470,7 @@ int main()
     int lim_inf = 1; // valor mínimo
     int lim_sup = 6; // valor máximo
     if (dificultad == 1) {
-         lim_sup = 4; // valor máximo
+         lim_sup = 2; // valor máximo
     }
     
     int* mat = (int*)malloc(n * m * sizeof(int)); // matriz aleatoria
@@ -347,14 +514,13 @@ int main()
         }
         printf("\n");
 
-        eliminar_elementos(mat, n, m, posicionesVistas);
+        eliminar_elementos(mat, n, m, posicionesVistas,fila,colum);
         printf("\n\n");
         imprimir(mat,n,m);
         printf("\n\n");
         caer_caramelos_host(mat, n, m);
         imprimir(mat, n, m);
         rellenar_huecos_host(mat, n, m, lim_inf, lim_sup);
-        vidas -= 1;
     }
 
     free(mat);
