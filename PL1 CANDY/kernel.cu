@@ -57,13 +57,13 @@ void ver_candy(int* mat, int n, int m,int colum,int fila, int* vector,int elemen
         if (fila != 0) {
             ver_candy(mat, n, m, colum, fila - 1, vector,elemento);
         }
-        if (fila != n) {
+        if (fila != n-1) {
             ver_candy(mat, n, m, colum, fila + 1, vector,elemento);
         }
         if (colum != 0) {
             ver_candy(mat, n, m, colum - 1, fila, vector,elemento);
         }
-        if (colum != m) {
+        if (colum != m-1) {
             ver_candy(mat, n, m, colum + 1, fila, vector,elemento);
         }
         
@@ -89,6 +89,23 @@ __global__ void random_matrix(int* mat, int n, int m, int lim_inf, int lim_sup, 
     }
 }
 
+__global__ void rellenar_huecos(int* mat, int n, int m, int lim_inf, int lim_sup, unsigned int ale, curandState* state) {
+        // Calcular las coordenadas x e y del hilo
+        int idx = threadIdx.x + blockDim.x * blockIdx.x;
+        int idy = threadIdx.y + blockDim.y * blockIdx.y;
+
+        // Verificar si el hilo se encuentra dentro de los límites de la matriz
+        if (idx < m && idy < n && mat[idy * m + idx] == -1) {
+            // Inicializar el generador de números aleatorios
+            curand_init(ale, idy * m + idx, 0, &state[idy * m + idx]);
+            // Generar un número aleatorio entero entre "lim_inf" y "lim_sup"
+            int val = curand(&state[idy * m + idx]) % lim_sup + lim_inf;
+            
+            // Asignar el valor aleatorio al hueco
+            mat[idy * m + idx] = val;
+            
+        }
+}
 
 
 __global__ void eliminar_iguales_juntos(int* mat, int n, int m,int* vector) {
@@ -113,15 +130,14 @@ __global__ void eliminar_iguales_juntos(int* mat, int n, int m,int* vector) {
 }
 
 
-
 void eliminar_elementos(int* matriz, int n, int m, int* vector) { //NO SE SI AQUI TMBN TENEMOS QUE ELIMINAR EL ELEMENTO DEL VECTOR DE POSICIONES 
     int* d_matriz;
     int* d_vector;
     int tamVector = n*m;
 
     // Alocar memoria para la matriz y el vector en la GPU
-    cudaMalloc(&d_matriz, n * m * sizeof(int));
-    cudaMalloc(&d_vector, tamVector * sizeof(int));
+    cudaMalloc((void**) & d_matriz, n * m * sizeof(int));
+    cudaMalloc((void**)&d_vector, tamVector * sizeof(int));
 
     // Copiar la matriz y el vector de la CPU a la GPU
     cudaMemcpy(d_matriz, matriz, n * m * sizeof(int), cudaMemcpyHostToDevice);
@@ -144,28 +160,25 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector) { //NO SE SI AQU
 }
 
 
-__global__ void caer_caramelos(int* matriz, int n, int m) {
+__global__  void caer_caramelos(int* matriz, int n, int m) {
     // Calcular las coordenadas x e y del hilo
     int idx = threadIdx.x + blockDim.x * blockIdx.x;
     int idy = threadIdx.y + blockDim.y * blockIdx.y;
-    int pos = idy * m + idx;
-    int contador = 0;
-    int aux;
 
 
+    // Contar los elementos -1 debajo del hilo
+    int num_minus_1 = 0;
     for (int i = idy; i < n; ++i) {
-        int elem_actual = i * m + idx;
-        if (matriz[elem_actual] == -1){
-            contador++;
+        if (matriz[i * m + idx] == -1) {
+            num_minus_1++;
         }
     }
-
-    for (int j = 0; j <= idy; ++j) {
-        if (contador > 0&&matriz[j*m+idx]!=-1) {
-            aux = matriz[(j + contador) * m + idx];
-            matriz[(j + contador) * m + idx] = matriz[j * m + idx];
-            matriz[j * m + idx] = -1;
-        }
+    __syncthreads();
+    // Buscar el primer elemento -1 debajo del hilo y intercambiarlo
+    if (num_minus_1 > 0 && matriz[idy * m + idx] != -1) {
+        int aux = matriz[idy * m + idx];
+        matriz[idy * m + idx] = -1;
+        matriz[(idy + num_minus_1) * m + idx] = aux;
     }
 }
 
@@ -175,7 +188,7 @@ void caer_caramelos_host(int* matriz, int n, int m) {
     int size = n * m * sizeof(int);
     int* d_matriz;
 
-    cudaMalloc(&d_matriz, size);
+    cudaMalloc((void**)&d_matriz, size);
     cudaMemcpy(d_matriz, matriz, size, cudaMemcpyHostToDevice);
 
     // Configurar la cantidad de hilos por bloque y la cantidad de bloques por cuadrícula
@@ -202,7 +215,7 @@ __global__ void fill(int* vec, int n) {
 
 void crear_vector(int* posicionesVistas, int n, int m) {
     int* d_v;
-    cudaMalloc(&d_v, n * m * sizeof(int));
+    cudaMalloc((void**)&d_v, n * m * sizeof(int));
 
     // Definir la configuración del kernel
     int threadsPerBlock = 256;
@@ -219,10 +232,10 @@ void crear_vector(int* posicionesVistas, int n, int m) {
 
 void create_random_matrix(int* mat, int n, int m, int lim_inf, int lim_sup) {
     int* d_mat;
-    cudaMalloc(&d_mat, n * m * sizeof(int));
+    cudaMalloc((void**)&d_mat, n * m * sizeof(int));
 
     curandState* d_state;
-    cudaMalloc(&d_state, n * m * sizeof(curandState));
+    cudaMalloc((void**)&d_state, n * m * sizeof(curandState));
 
     unsigned int ale = generate_seed();
 
@@ -236,6 +249,26 @@ void create_random_matrix(int* mat, int n, int m, int lim_inf, int lim_sup) {
     cudaFree(d_state);
 }
 
+void rellenar_huecos_host(int* mat, int n, int m, int lim_inf, int lim_sup) {
+    int* d_mat;
+    cudaMalloc((void**)&d_mat, n * m * sizeof(int));
+    cudaMemcpy(d_mat, mat, n * m * sizeof(int), cudaMemcpyHostToDevice);
+
+
+    curandState* d_state;
+    cudaMalloc((void**)&d_state, n * m * sizeof(curandState));
+
+    unsigned int ale = generate_seed();
+
+    dim3 block_size(32, 32);
+    dim3 num_blocks((n + block_size.x - 1) / block_size.x, (m + block_size.y - 1) / block_size.y);
+    rellenar_huecos << <num_blocks, block_size >> > (d_mat, n, m, lim_inf, lim_sup, ale, d_state);
+
+    cudaMemcpy(mat, d_mat, n * m * sizeof(int), cudaMemcpyDeviceToHost);
+
+    cudaFree(d_mat);
+    cudaFree(d_state);
+}
 
 
 void imprimir(int* matriz, int n, int m) {
@@ -250,16 +283,9 @@ void imprimir(int* matriz, int n, int m) {
 }
 
 
-int generarNumAleatorio(int hasta) {
-    srand(generate_seed());
-    int ale = rand() % (hasta + 1);
-    return ale;
-}
-
-
 int main()
 {
-
+    srand(time(NULL));
     int modo; //automático o manual
     int dificultad; //dificultad del juego
     int n; // número de filas
@@ -303,11 +329,9 @@ int main()
                 scanf("%d", &colum);
 
             }
-            else {                                                              //ESTA MIERDA ESTA MAL, REVISAR A VER COMO SERÍA
-                srand(time(NULL));
-                colum = generarNumAleatorio(n);
-                srand(time(NULL));
-                fila = generarNumAleatorio(m);
+            else {              
+                colum =rand() %m;
+                fila = rand() %n;
                 printf("%d\n", colum);
                 printf("%d\n", fila);
             }
@@ -328,11 +352,10 @@ int main()
         imprimir(mat,n,m);
         printf("\n\n");
         caer_caramelos_host(mat, n, m);
-
+        imprimir(mat, n, m);
+        rellenar_huecos_host(mat, n, m, lim_inf, lim_sup);
         vidas -= 1;
     }
-
-   
 
     free(mat);
 
