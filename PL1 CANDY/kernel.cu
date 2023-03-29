@@ -53,13 +53,13 @@ void ver_candy(int* mat, int n, int m,int colum,int fila, int* vector,int elemen
         if (fila != 0) {//Adyacente de arriba
             ver_candy(mat, n, m, colum, fila - 1, vector,elemento);
         }
-        if (fila != n-1) {//Adyacente de abajo
+        if (fila != n - 1) {//Adyacente de abajo
             ver_candy(mat, n, m, colum, fila + 1, vector,elemento);
         }
         if (colum != 0) {//Adyacente de la izquierda
             ver_candy(mat, n, m, colum - 1, fila, vector,elemento);
         }
-        if (colum != m-1) {//Adyacente de la derecha
+        if (colum != m - 1) {//Adyacente de la derecha
             ver_candy(mat, n, m, colum + 1, fila, vector,elemento);
         }
         
@@ -269,11 +269,11 @@ void caer_caramelos_host(int* matriz, int n, int m) {
 
     //TODO
     // Configurar la cantidad de hilos por bloque y la cantidad de bloques por cuadrícula
-    dim3 tamBloque(16, 16);
-    dim3 tamCuadricula((n + tamBloque.x - 1) / tamBloque.x, (m + tamBloque.y - 1) / tamBloque.y);
+    dim3 tamBloque(m, n);
+    dim3 tamCuadricula(1,1);
 
     // Llamar al kernel caer_caramelos
-    caer_caramelos << <tamCuadricula, tamBloque >> > (d_matriz, n, m);
+    caer_caramelos <<<tamCuadricula, tamBloque >> > (d_matriz, n, m);
 
     // Copiar la matriz resultante de la GPU al host
     cudaMemcpy(matriz, d_matriz, size, cudaMemcpyDeviceToHost);
@@ -283,13 +283,14 @@ void caer_caramelos_host(int* matriz, int n, int m) {
 }
 
 
-__global__ void rellenar(int* vec, int n) {
+__global__ void rellenar(int* vec, int n,int m) {
     //rellenar el vector con -1
 
     //posicion del hilo correspondiente al vector
-    int i = threadIdx.x + blockIdx.x * blockDim.x;
-    if (i < n) {
-        vec[i] = -1;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idy = threadIdx.y + blockIdx.y * blockDim.y;
+    if (idy < n && idx < m) {
+        vec[idy*m+idx] = -1;
     }
 }
 
@@ -301,11 +302,11 @@ void crear_vector(int* posicionesVistas, int n, int m) {
 
     // Definir la configuración del kernel 
     //TODO
-    int threadsPerBlock = 256;
-    int blocksPerGrid = (n * m + threadsPerBlock - 1) / threadsPerBlock;
+    dim3 threadsPerBlock (m,n);
+    dim3 blocksPerGrid (1,1) ;
 
     // Llamar al kernel
-    rellenar << <blocksPerGrid, threadsPerBlock >> > (d_v, n * m);
+    rellenar <<<blocksPerGrid, threadsPerBlock >> > (d_v, n, m);
 
     //Copiamos en el host el vector creado por el kernel
     cudaMemcpy(posicionesVistas, d_v, n * m * sizeof(int), cudaMemcpyDeviceToHost);
@@ -330,9 +331,9 @@ void crear_matriz_aleatoria(int* mat, int n, int m, int lim_inf, int lim_sup) {
     unsigned int ale = generate_seed();
 
     //TODO
-    dim3 block_size(32, 32);
-    dim3 num_blocks((n + block_size.x - 1) / block_size.x, (m + block_size.y - 1) / block_size.y);
-    matriz_aleatoria << <num_blocks, block_size >> > (d_mat, n, m, lim_inf, lim_sup, ale, d_state);
+    dim3 block_size(m,n);
+    dim3 num_blocks(1,1);
+    matriz_aleatoria <<<num_blocks, block_size >> > (d_mat, n, m, lim_inf, lim_sup, ale, d_state);
     
     //Copiamos en el host el resultado obtenido en el device
     cudaMemcpy(mat, d_mat, n * m * sizeof(int), cudaMemcpyDeviceToHost);
@@ -359,9 +360,9 @@ void rellenar_huecos_host(int* mat, int n, int m, int lim_inf, int lim_sup) {
     unsigned int ale = generate_seed();
 
     //TODO
-    dim3 block_size(32, 32);
-    dim3 num_blocks((n + block_size.x - 1) / block_size.x, (m + block_size.y - 1) / block_size.y);
-    rellenar_huecos << <num_blocks, block_size >> > (d_mat, n, m, lim_inf, lim_sup, ale, d_state);
+    dim3 block_size(m, n);
+    dim3 num_blocks(1,1);
+    rellenar_huecos <<<num_blocks, block_size >> > (d_mat, n, m, lim_inf, lim_sup, ale, d_state);
 
     //Copiamos del device al host
     cudaMemcpy(mat, d_mat, n * m * sizeof(int), cudaMemcpyDeviceToHost);
@@ -483,6 +484,16 @@ __global__ void explotarRx(int* matriz, int n, int m, int fila, int columna, int
     vector[0] = -1;
 }
 
+__global__ void eliminar1(int* mat, int* vector, int n, int m, int fila, int columna) {
+    int idx = threadIdx.x + blockDim.x * blockIdx.x;//coordenada de la fila del hilo
+    int idy = threadIdx.y + blockDim.y * blockIdx.y;//coordenada de la columna del hilo
+    int pos = idy * m + idx;//posicion del hilo
+    if (pos == fila * m + columna) {
+        vector[0] = -1;
+        mat[pos] = -1;
+    }
+}
+
 void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int columna,int lim_sup, int lim_inf) {                       //AQUI HAY Q LLAMAR BIEN A LOS MÉTODOS DEL KERNEL
     //creacion de punteros para la GPU
     int* d_matriz;
@@ -500,8 +511,8 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
     cudaMemcpy(d_vector, vector, tamVector * sizeof(int), cudaMemcpyHostToDevice);
 
     // Definir la configuración del kernel
-    dim3 blockSize(16, 16);
-    dim3 gridSize((n + blockSize.x - 1) / blockSize.x, (m + blockSize.y - 1) / blockSize.y);
+    dim3 blockSize(m, n);
+    dim3 gridSize(1,1);
 
     // Llamar al kernel
     switch (cuantas_posiciones(vector, n, m)) {
@@ -509,7 +520,8 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
         case 1: 
             //No hay posciones adyacentes
             if (matriz[vector[0]] == 1 || matriz[vector[0]] == 2 || matriz[vector[0]] == 3 || matriz[vector[0]] == 4 || matriz[vector[0]] == 5 || matriz[vector[0]] == 6) {
-                --vidas;
+                vidas--;
+                eliminar1 << <gridSize, blockSize >> > (d_matriz, d_vector, n, m, fila, columna);
             }
             else if (matriz[vector[0]] == 7) {
                 //BOMBA
@@ -517,40 +529,39 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
                 curandState* d_state;
                 cudaMalloc((void**)&d_state, n * m * sizeof(curandState));
                 unsigned int ale = generate_seed();
-                explotarBomba << <gridSize, blockSize >> > (d_matriz, n, m, fila, columna, ale, d_state,d_vector);
+                explotarBomba <<<gridSize, blockSize >> > (d_matriz, n, m, fila, columna, ale, d_state,d_vector);
             }
             else if (matriz[vector[0]] == 8) {
                 //TNT
-                explotarTNT << <gridSize, blockSize >> > (d_matriz, n, m, fila, columna,d_vector);
+                explotarTNT <<<gridSize, blockSize >> > (d_matriz, n, m, fila, columna,d_vector);
             }
             else if (matriz[vector[0]] > 8) {
                 //Rx
                 int tipo = matriz[vector[0]];
-                explotarRx << <gridSize, blockSize >> > (d_matriz, n, m, fila, columna, tipo,d_vector);
+                explotarRx <<<gridSize, blockSize >> > (d_matriz, n, m, fila, columna, tipo,d_vector);
             }
-            vector[0] = -1;
             break;
         //Hay 1 caramelo adyacente
         case 2:
-            eliminar_iguales_juntos << <gridSize, blockSize >> > (d_matriz, n, m, d_vector);
+            eliminar_iguales_juntos <<<gridSize, blockSize >> > (d_matriz, n, m, d_vector);
             break;
         //Hay 2 caramelos adyacentes
         case 3:
-            eliminar_iguales_juntos << <gridSize, blockSize >> > (d_matriz, n, m, d_vector);
+            eliminar_iguales_juntos <<<gridSize, blockSize >> > (d_matriz, n, m, d_vector);
             break;
         //Hay 3 caramelos adyacentes
         case 4:
-            eliminar_iguales_juntos << <gridSize, blockSize >> > (d_matriz, n, m, d_vector);
+            eliminar_iguales_juntos <<<gridSize, blockSize >> > (d_matriz, n, m, d_vector);
             break;
         //Hay 4 caramelos adyacentes (se boorran 5 elementos-->bomba)
         case 5:
             //Kernel sustituir el elemento de la posición por un B y borrar el resto
-            eliminar5 << <gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna);
+            eliminar5 <<<gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna);
             break;
         //Hay 5 caramelos adyacentes (se boorran 6 elementos-->TNT)
         case 6:
             //Kernel sustituir el elemento de la posición por un TNT y borrar el resto
-            eliminar6 << <gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna);
+            eliminar6 <<<gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna);
             break;
         //Hay 6 o mas caramelos adyacentes (se boorran 7 o mas elementos-->Rx)
         default:
@@ -560,7 +571,7 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
             curandState* d_state;
             cudaMalloc((void**)&d_state, n * m * sizeof(curandState));
             unsigned int ale = generate_seed();
-            eliminar7oMas << <gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna, ale, d_state,lim_sup,lim_inf);
+            eliminar7oMas <<<gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna, ale, d_state,lim_sup,lim_inf);
             break;
         }
 
@@ -568,7 +579,6 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
     // Copiar la matriz resultante de la GPU a la CPU
     cudaMemcpy(matriz, d_matriz, n * m * sizeof(int), cudaMemcpyDeviceToHost);
     cudaMemcpy(vector, d_vector, n * m * sizeof(int), cudaMemcpyDeviceToHost);
-
     // Liberar la memoria de la GPU
     cudaFree(d_matriz);
     cudaFree(d_vector);
@@ -577,7 +587,6 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
 //imprimir la matriz
 void imprimir(int* matriz, int n, int m) {
     printf("\n");
-
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < m; j++) {
             if (matriz[i * m + j] == -1) {
@@ -617,6 +626,7 @@ void imprimir(int* matriz, int n, int m) {
 int main()
 {
     srand(time(NULL));
+    char tecla;
     int modo; //automático o manual
     int dificultad; //dificultad del juego
     int n; // número de filas
@@ -645,23 +655,27 @@ int main()
     crear_matriz_aleatoria(mat, n, m, lim_inf, lim_sup);//Inicializacion de la matriz
 
     //TODO                                                                                 
-    dim3 dimBlock(n,m);                             //<--ESTO HAY QUE VER COMO HACERLO EFICIENTE
-    dim3 dimGrid(1);
+    dim3 dimBlock(m,n);                             //<--ESTO HAY QUE VER COMO HACERLO EFICIENTE
+    dim3 dimGrid(1,1);
 
     int colum=-1;
     int fila=-1;
     int x = 0;
 
+    printf("\n%d VIDAS RESTANTES\n", vidas);
+    imprimir(mat, n, m);
+    printf("\n");
+
+
     while (vidas > 0) {
-        imprimir(mat, n, m);
+        
         do {
             if (modo == 2) {
                 //obtencion de filas y columnas por parte del usuario
-                printf("Introduce la fila del caramelo que quieres comprobar\n");
+                printf("\nIntroduce la fila del caramelo que quieres comprobar\n");
                 scanf("%d", &fila);
                 printf("Introduce la columna del caramelo que quieres comprobar\n");
                 scanf("%d", &colum);
-
             }
             else { 
                 //obtencion de filas y columna de manera aleatoria
@@ -672,8 +686,12 @@ int main()
                 srand(time(NULL) + x);
                 fila = rand()%n;
 
-                printf("Fila escogida: %d\n",fila);
+                printf("\nFila escogida: %d\n",fila);
                 printf("Columna escogida: %d\n", colum);
+
+                printf("\nPULSA ENTER PARA CONTINUAR\n");
+                fflush(stdin);
+                tecla = getchar();
 
             }
             if (colum > m - 1 || fila > n - 1 || colum < 0 || fila < 0) {
@@ -685,12 +703,14 @@ int main()
         ver_candy(mat, n, m, colum, fila, posicionesVistas,elemento); //obtenemos un vector con todas los caramelos adyacentes al seleccionado, incluido el propio caramelo 
 
         printf("\n");
-
-        eliminar_elementos(mat, n, m, posicionesVistas,fila,colum,lim_sup,lim_inf);//Eliminacion de la posicion seleccionada y sus adyacentes
+        eliminar_elementos(mat, n, m, posicionesVistas,fila,colum,lim_sup,lim_inf);//Eliminacion de la posicion seleccionada y sus adyacentesç
+        imprimir(mat, n, m);
         caer_caramelos_host(mat, n, m);//caida de los caramelos que tengan elementos eliminados por debajo
+        imprimir(mat, n, m);
         rellenar_huecos_host(mat, n, m, lim_inf, lim_sup);//donde haya elementos eliminados se ponen nuevos caramelos aleatorios
 
-        printf("\n%d VIDAS RESTANTES\n",vidas);
+        printf("\n%d VIDAS RESTANTES\n", vidas);
+        imprimir(mat, n, m);
     }
 
     printf("\nFIN DE JUEGO\n");
