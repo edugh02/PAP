@@ -8,9 +8,6 @@
 #include <time.h>
 
 
-/*const int fila;
-const int columna;
-*/
 int vidas = 5;
  //y filas, x columnas --> idy*columnas + idx ( idx es todos los .x)
 
@@ -22,6 +19,7 @@ unsigned int generate_seed() {
     return (unsigned int)t % 100000;
 }
 
+//Comprueba si una posicion esta en el vector
 bool esta_en_vector(int* vector, int m, int n, int pos) {
     for (int i = 0; i < n * m; ++i) {
         if (vector[i] == pos) {
@@ -31,6 +29,7 @@ bool esta_en_vector(int* vector, int m, int n, int pos) {
     return false;
 }
 
+//retorna la primera poscion donde haya un -1
 int primer_vacio(int* vector, int n, int m) {
     int x = 0;
     for (int i = 0; i < n * m; ++i) {
@@ -44,28 +43,30 @@ int primer_vacio(int* vector, int n, int m) {
 
 
 void ver_candy(int* mat, int n, int m,int colum,int fila, int* vector,int elemento) {
-    int caramelo = fila * m + colum;
+    int caramelo = fila * m + colum;//posicion en la matriz de las coordenadas
 
     if (!esta_en_vector(vector,m,n,caramelo)&& mat[caramelo]==elemento) {
+        //comprobamos que la posicion no ha sido ya insertada
         int pos=primer_vacio(vector,n,m);
-        printf("\nposicion del vector siguiente: %d \n", pos);
         vector[pos] = caramelo;
-        if (fila != 0) {
+        //insertamos en la primera posicion que se encuentre vacia del vector, la posicion del caramelo
+        if (fila != 0) {//Adyacente de arriba
             ver_candy(mat, n, m, colum, fila - 1, vector,elemento);
         }
-        if (fila != n-1) {
+        if (fila != n-1) {//Adyacente de abajo
             ver_candy(mat, n, m, colum, fila + 1, vector,elemento);
         }
-        if (colum != 0) {
+        if (colum != 0) {//Adyacente de la izquierda
             ver_candy(mat, n, m, colum - 1, fila, vector,elemento);
         }
-        if (colum != m-1) {
+        if (colum != m-1) {//Adyacente de la derecha
             ver_candy(mat, n, m, colum + 1, fila, vector,elemento);
         }
         
     }    
 }
 
+//obtencion de cuantas posiciones han sido encontradas para ser borradas
 int cuantas_posiciones(int* vector, int n, int m) {
     int contador = 0;
     for (int i = 0; i < n * m; ++i) {
@@ -77,7 +78,7 @@ int cuantas_posiciones(int* vector, int n, int m) {
 }
 
 // Esta función genera una matriz aleatoria de números enteros entre "lim_inf" y "lim_sup".
-__global__ void random_matrix(int* mat, int n, int m, int lim_inf, int lim_sup, unsigned int ale, curandState* state) {
+__global__ void matriz_aleatoria(int* mat, int n, int m, int lim_inf, int lim_sup, unsigned int ale, curandState* state) {
     // Calcular las coordenadas x e y del hilo
     int idx = threadIdx.x + blockDim.x * blockIdx.x;
     int idy = threadIdx.y + blockDim.y * blockIdx.y;
@@ -101,7 +102,7 @@ __global__ void rellenar_huecos(int* mat, int n, int m, int lim_inf, int lim_sup
         // Verificar si el hilo se encuentra dentro de los límites de la matriz
         if (idx < m && idy < n && mat[idy * m + idx] == -1) {
             // Inicializar el generador de números aleatorios
-            curand_init(ale, idy * m + idx, 0, &state[idy * m + idx]);
+            curand_init(ale,idy * m + idx, 0, &state[idy * m + idx]);
             // Generar un número aleatorio entero entre "lim_inf" y "lim_sup"
             int val = curand(&state[idy * m + idx]) % lim_sup + lim_inf;
             
@@ -110,7 +111,6 @@ __global__ void rellenar_huecos(int* mat, int n, int m, int lim_inf, int lim_sup
             
         }
 }
-
 
 __global__ void eliminar_iguales_juntos(int* mat, int n, int m,int* vector) {
     // Calcular las coordenadas x e y del hilo
@@ -129,6 +129,7 @@ __global__ void eliminar_iguales_juntos(int* mat, int n, int m,int* vector) {
     // Verificar si el hilo se encuentra dentro de los límites de la matriz y coincide con una posición que hay que eliminar
     if (centinela) {
         mat[idy * m + idx] = -1;
+        //el elemento deja de ser analizado
         vector[pos] = -1;
     }
 }
@@ -140,7 +141,7 @@ __global__ void eliminar5(int* mat, int n, int m, int* vector,int fila,int colum
     int pos=fila*m+columna;
     
     if (vector[0] == idy * m + idx) {
-        mat[vector[0]] = 7;
+        mat[vector[0]] = 7;//Se pone una bomba en la posicion
         vector[0] = -1;
     }
 
@@ -164,10 +165,9 @@ __global__ void eliminar6(int* mat, int n, int m, int* vector,int fila,int colum
     int idy = threadIdx.y + blockDim.y * blockIdx.y;
     bool centinela = false;
     int pos = fila * m + columna;
-
     
     if (vector[0] == idy * m + idx) {
-        mat[fila * m + columna] = 8;
+        mat[fila * m + columna] = 8;//se pone una TNT en la posicion 
         vector[0] = -1;
     }
 
@@ -197,22 +197,22 @@ __global__ void eliminar7oMas(int* mat, int n, int m, int* vector,int fila,int c
     //generar numero aleatorio que indicará que tipo de r se forma
     
     if (vector[0] == idy * m + idx) {//9-->R1 10-->R2 11-->R3 21-->R4 13-->R5 14-->R6
-        if (val_ale == 1) {
+        if (val_ale == 1) {//En la posicion se pone un R1
             mat[idy * m + idx] = 9;
         }
-        else if (val_ale == 2) {
+        else if (val_ale == 2) {//En la posicion se pone un R2
             mat[idy * m + idx] = 10;
         }
-        else if (val_ale == 3) {
+        else if (val_ale == 3) {//En la posicion se pone un R3
             mat[idy * m + idx] = 11;
         }
-        else if (val_ale == 4) {
+        else if (val_ale == 4) {//En la posicion se pone un R4
             mat[idy * m + idx] = 12;
         }
-        else if (val_ale == 5) {
+        else if (val_ale == 5) {//En la posicion se pone un R5
             mat[idy * m + idx] = 13;
         }
-        else {
+        else {//En la posicion se pone un R6
             mat[idy * m + idx] = 14;
         }
         vector[0] = -1;
@@ -257,12 +257,17 @@ __global__  void caer_caramelos(int* matriz, int n, int m) {
 
 
 void caer_caramelos_host(int* matriz, int n, int m) {
-    int size = n * m * sizeof(int);
+    //Creacion de puntero para la GPU
     int* d_matriz;
 
+    //Reservamos memoria 
+    int size = n * m * sizeof(int);
     cudaMalloc((void**)&d_matriz, size);
+
+    //copiamos del host al device
     cudaMemcpy(d_matriz, matriz, size, cudaMemcpyHostToDevice);
 
+    //TODO
     // Configurar la cantidad de hilos por bloque y la cantidad de bloques por cuadrícula
     dim3 tamBloque(16, 16);
     dim3 tamCuadricula((n + tamBloque.x - 1) / tamBloque.x, (m + tamBloque.y - 1) / tamBloque.y);
@@ -278,7 +283,10 @@ void caer_caramelos_host(int* matriz, int n, int m) {
 }
 
 
-__global__ void fill(int* vec, int n) {
+__global__ void rellenar(int* vec, int n) {
+    //rellenar el vector con -1
+
+    //posicion del hilo correspondiente al vector
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     if (i < n) {
         vec[i] = -1;
@@ -286,66 +294,87 @@ __global__ void fill(int* vec, int n) {
 }
 
 void crear_vector(int* posicionesVistas, int n, int m) {
+    //creacion de un puntero para la GPU
     int* d_v;
+    //Reservamos memoria
     cudaMalloc((void**)&d_v, n * m * sizeof(int));
 
-    // Definir la configuración del kernel
+    // Definir la configuración del kernel 
+    //TODO
     int threadsPerBlock = 256;
     int blocksPerGrid = (n * m + threadsPerBlock - 1) / threadsPerBlock;
 
     // Llamar al kernel
-    fill << <blocksPerGrid, threadsPerBlock >> > (d_v, n * m);
+    rellenar << <blocksPerGrid, threadsPerBlock >> > (d_v, n * m);
 
+    //Copiamos en el host el vector creado por el kernel
     cudaMemcpy(posicionesVistas, d_v, n * m * sizeof(int), cudaMemcpyDeviceToHost);
+    //liberamos el puntero
     cudaFree(d_v);
 }
 
 
 
-void create_random_matrix(int* mat, int n, int m, int lim_inf, int lim_sup) {
+void crear_matriz_aleatoria(int* mat, int n, int m, int lim_inf, int lim_sup) {
+    //creacion de un puntero para la GPU
     int* d_mat;
+    //reservamos espacio en la memoria
     cudaMalloc((void**)&d_mat, n * m * sizeof(int));
 
+    //puntero que ayudara a la obtencion de numeros aleatorios dentro del Kernel
     curandState* d_state;
+    //reservamos espacio en la memoria
     cudaMalloc((void**)&d_state, n * m * sizeof(curandState));
 
+    //obtencion de una semilla que ayudara a la creacion de numeros aleatorios
     unsigned int ale = generate_seed();
 
+    //TODO
     dim3 block_size(32, 32);
     dim3 num_blocks((n + block_size.x - 1) / block_size.x, (m + block_size.y - 1) / block_size.y);
-    random_matrix << <num_blocks, block_size >> > (d_mat, n, m, lim_inf, lim_sup, ale, d_state);
+    matriz_aleatoria << <num_blocks, block_size >> > (d_mat, n, m, lim_inf, lim_sup, ale, d_state);
     
+    //Copiamos en el host el resultado obtenido en el device
     cudaMemcpy(mat, d_mat, n * m * sizeof(int), cudaMemcpyDeviceToHost);
 
+    //liberacion de punteros
     cudaFree(d_mat);
     cudaFree(d_state);
 }
 
 void rellenar_huecos_host(int* mat, int n, int m, int lim_inf, int lim_sup) {
+    //creacion de un puntero para la GPU
     int* d_mat;
+
+    //Reservamos memoria 
     cudaMalloc((void**)&d_mat, n * m * sizeof(int));
+
+    //Copiamos del host al device 
     cudaMemcpy(d_mat, mat, n * m * sizeof(int), cudaMemcpyHostToDevice);
 
-
+    //Creacion de un puntero que ayudara a la creacion de numeros aleatorios
     curandState* d_state;
     cudaMalloc((void**)&d_state, n * m * sizeof(curandState));
 
     unsigned int ale = generate_seed();
 
+    //TODO
     dim3 block_size(32, 32);
     dim3 num_blocks((n + block_size.x - 1) / block_size.x, (m + block_size.y - 1) / block_size.y);
     rellenar_huecos << <num_blocks, block_size >> > (d_mat, n, m, lim_inf, lim_sup, ale, d_state);
 
+    //Copiamos del device al host
     cudaMemcpy(mat, d_mat, n * m * sizeof(int), cudaMemcpyDeviceToHost);
 
+    //liberamos punteros
     cudaFree(d_mat);
     cudaFree(d_state);
 }
 
 
 __global__ void explotarBomba(int* mat, int n, int m, int fila, int columna, unsigned int ale, curandState* state,int* vector) {
-    int idx = threadIdx.x + blockDim.x * blockIdx.x;
-    int idy = threadIdx.y + blockDim.y * blockIdx.y;
+    int idx = threadIdx.x + blockDim.x * blockIdx.x; //coordenada de la fila del hilo
+    int idy = threadIdx.y + blockDim.y * blockIdx.y; //coordenada de la columna del hilo
                                                                         //TODO falta hacer la concatenacion
     curand_init(ale, idy * m + idx, 0, &state[idy * m + idx]);
     // Generar un número aleatorio entero entre "lim_inf" y "lim_sup"
@@ -361,12 +390,13 @@ __global__ void explotarBomba(int* mat, int n, int m, int fila, int columna, uns
             mat[idy * m + idx] = -1;
         }
     }
+    //el elemento deja de ser analizado
     vector[0] = -1;
 }
 
 __global__ void explotarTNT(int* mat, int n, int m, int fila, int columna,int* vector) { 
-    int idx = threadIdx.x + blockDim.x * blockIdx.x;
-    int idy = threadIdx.y + blockDim.y * blockIdx.y;
+    int idx = threadIdx.x + blockDim.x * blockIdx.x; //coordenada de la fila del hilo
+    int idy = threadIdx.y + blockDim.y * blockIdx.y; //coordenada de la columna del hilo
                                                                             //TODO falta hacer la concatenacion
     mat[fila * m + columna] = -1;
 
@@ -406,41 +436,42 @@ __global__ void explotarTNT(int* mat, int n, int m, int fila, int columna,int* v
     else if (columna != m && idy == fila && idx == columna + 1) {
         mat[idy * m + idx] = -1;
     }
+    //el elemento deja de ser analizado
     vector[0] = -1;
 }
 
 __global__ void explotarRx(int* matriz, int n, int m, int fila, int columna, int tipo,int *vector) { 
-    int idx = threadIdx.x + blockDim.x * blockIdx.x;
-    int idy = threadIdx.y + blockDim.y * blockIdx.y;
-    int pos = idy * m + idx;
+    int idx = threadIdx.x + blockDim.x * blockIdx.x;//coordenada de la fila del hilo
+    int idy = threadIdx.y + blockDim.y * blockIdx.y;//coordenada de la columna del hilo
+    int pos = idy * m + idx;//posicion del hilo
     matriz[fila*m+columna] = -1;
     switch (tipo) {
-        case 9:
+        case 9://R1-->eliminacion de todos los 1 de la matriz
             if (matriz[pos] == 1) {
                 matriz[pos]=-1;
             }
             break;
-        case 10:
+        case 10://R2-->eliminacion de todos los 2 de la matriz
             if (matriz[pos] == 2) {
                 matriz[pos] = -1;
             }
             break;
-        case 11:
+        case 11://R3-->eliminacion de todos los 3 de la matriz
             if (matriz[pos] == 3) {
                 matriz[pos] = -1;
             }
             break;
-        case 12:
+        case 12://R4-->eliminacion de todos los 4 de la matriz
             if (matriz[pos] == 4) {
                 matriz[pos] = -1;
             }
             break;
-        case 13:
+        case 13://R5-->eliminacion de todos los 5 de la matriz
             if (matriz[pos] == 5) {
                 matriz[pos] = -1;
             }
             break;
-        case 14:
+        case 14://R6-->eliminacion de todos los 6 de la matriz
             if (matriz[pos] == 6) {
                 matriz[pos] = -1;
             }
@@ -448,12 +479,15 @@ __global__ void explotarRx(int* matriz, int n, int m, int fila, int columna, int
         default:
             break;
     }
+    //el elemento deja de ser analizado
     vector[0] = -1;
 }
 
 void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int columna,int lim_sup, int lim_inf) {                       //AQUI HAY Q LLAMAR BIEN A LOS MÉTODOS DEL KERNEL
+    //creacion de punteros para la GPU
     int* d_matriz;
     int* d_vector;
+
     int tamVector = n * m;
     srand(time(NULL));
 
@@ -511,19 +545,15 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
         //Hay 4 caramelos adyacentes (se boorran 5 elementos-->bomba)
         case 5:
             //Kernel sustituir el elemento de la posición por un B y borrar el resto
-            //generamos la semilla para luego crear un número aleatorio
-            printf("\n\nENTRA EN ELIMINAR 5\n\n");
             eliminar5 << <gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna);
             break;
         //Hay 5 caramelos adyacentes (se boorran 6 elementos-->TNT)
         case 6:
             //Kernel sustituir el elemento de la posición por un TNT y borrar el resto
-            printf("\n\nENTRA EN ELIMINAR 6\n\n");
             eliminar6 << <gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna);
             break;
         //Hay 6 o mas caramelos adyacentes (se boorran 7 o mas elementos-->Rx)
         default:
-            printf("\n\nENTRA EN ELIMINAR 7o+\n\n");
             //Kernel sustituir el elemento de la posición por un Rx y borrar el resto
             int tipo = rand() % 6+1;
             //generamos la semilla para luego crear un número aleatorio
@@ -544,39 +574,39 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
     cudaFree(d_vector);
 }
 
-
+//imprimir la matriz
 void imprimir(int* matriz, int n, int m) {
     printf("\n");
 
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < m; j++) {
             if (matriz[i * m + j] == -1) {
-                printf("    ");
+                printf("    "); //elemento borrado, no se pone 
             }else if (matriz[i * m + j]==7) {
-                printf("B   ");
+                printf("B   ");//bomba
             }else if (matriz[i * m + j] == 8) {
-                printf("T   ");
+                printf("T   ");//TNT
             }
             else if (matriz[i * m + j] == 9) {
-                printf("R1  ");
+                printf("R1  ");//R1
             }
             else if (matriz[i * m + j] == 10) {
-                printf("R2  ");
+                printf("R2  ");//R2
             }
             else if (matriz[i * m + j] == 11) {
-                printf("R3  ");
+                printf("R3  ");//R3
             }
             else if (matriz[i * m + j] == 12) {
-                printf("R4  ");
+                printf("R4  ");//R4
             }
             else if (matriz[i * m + j] == 13) {
-                printf("R5  ");
+                printf("R5  ");//R5
             }
             else if (matriz[i * m + j] == 14) {
-                printf("R6  ");
+                printf("R6  ");//R6
             }
             else {
-                printf("%d   ", matriz[i * m + j]);
+                printf("%d   ", matriz[i * m + j]);//elementos normales de la matriz
             }
         }
         printf("\n");
@@ -591,6 +621,8 @@ int main()
     int dificultad; //dificultad del juego
     int n; // número de filas
     int m; // número de columnas
+
+    //Obtencion de valores de modo de juego
     printf("Bienvenido a Cundio Crack\n");
     printf("Introduce el modo de juego con el que quieres jugar: \n 1. Automatico \n 2. Manual \n");
     scanf("%d", &modo);
@@ -608,64 +640,63 @@ int main()
     }
     
     int* mat = (int*)malloc(n * m * sizeof(int)); // matriz aleatoria
-    int* posicionesVistas = (int*)malloc(n * m * sizeof(int)); 
-    crear_vector(posicionesVistas, n, m);
-    create_random_matrix(mat, n, m, lim_inf, lim_sup);
+    int* posicionesVistas = (int*)malloc(n * m * sizeof(int)); //Vector donde se guardan posiciones adyacentes
+    crear_vector(posicionesVistas, n, m);//Inicializa el vector
+    crear_matriz_aleatoria(mat, n, m, lim_inf, lim_sup);//Inicializacion de la matriz
 
-    //AQUI                                                                                  //<--ESTO HAY QUE VER COMO HACERLO EFICIENTE
-    dim3 dimBlock(n,m);
+    //TODO                                                                                 
+    dim3 dimBlock(n,m);                             //<--ESTO HAY QUE VER COMO HACERLO EFICIENTE
     dim3 dimGrid(1);
 
     int colum=-1;
     int fila=-1;
+    int x = 0;
 
     while (vidas > 0) {
         imprimir(mat, n, m);
         do {
             if (modo == 2) {
+                //obtencion de filas y columnas por parte del usuario
                 printf("Introduce la fila del caramelo que quieres comprobar\n");
                 scanf("%d", &fila);
                 printf("Introduce la columna del caramelo que quieres comprobar\n");
                 scanf("%d", &colum);
 
             }
-            else {              
-                colum =rand() %m;
-                fila = rand() %n;
-                printf("%d\n", colum);
-                printf("%d\n", fila);
-            }
-        } while (colum > m && fila > n && colum < 0 && fila < 0);
-        
-        int elemento = mat[fila * m + colum];
-        printf("Elemento antes %d \n", elemento);
-        ver_candy(mat, n, m, colum, fila, posicionesVistas,elemento);
+            else { 
+                //obtencion de filas y columna de manera aleatoria
+                x++;
+                srand(time(NULL) + x);
+                colum =rand()%m; 
+                x++;
+                srand(time(NULL) + x);
+                fila = rand()%n;
 
-        for (int i = 0; i < n * m; ++i) {
-            if (posicionesVistas[i] != -1) {
-                printf("%d ", posicionesVistas[i]);
+                printf("Fila escogida: %d\n",fila);
+                printf("Columna escogida: %d\n", colum);
+
             }
-        }
+            if (colum > m - 1 || fila > n - 1 || colum < 0 || fila < 0) {
+                printf("\nCOORDENADAS NO VALIDAS, introduce unas coordenadas posibles\n\n");
+            }
+        } while (colum > m-1 || fila > n-1 || colum < 0 || fila < 0);//comprobacion de que las filas introducidas no son validas
+        
+        int elemento = mat[fila * m + colum]; //caramelo en las coordenadas indicadas
+        ver_candy(mat, n, m, colum, fila, posicionesVistas,elemento); //obtenemos un vector con todas los caramelos adyacentes al seleccionado, incluido el propio caramelo 
 
         printf("\n");
 
-        eliminar_elementos(mat, n, m, posicionesVistas,fila,colum,lim_sup,lim_inf);
+        eliminar_elementos(mat, n, m, posicionesVistas,fila,colum,lim_sup,lim_inf);//Eliminacion de la posicion seleccionada y sus adyacentes
+        caer_caramelos_host(mat, n, m);//caida de los caramelos que tengan elementos eliminados por debajo
+        rellenar_huecos_host(mat, n, m, lim_inf, lim_sup);//donde haya elementos eliminados se ponen nuevos caramelos aleatorios
 
-        printf("\n\n");
-
-        imprimir(mat,n,m);
-
-        printf("\n\n");
-
-        caer_caramelos_host(mat, n, m);
-
-        printf("\n\n");
-
-        imprimir(mat, n, m);
-        rellenar_huecos_host(mat, n, m, lim_inf, lim_sup);
+        printf("\n%d VIDAS RESTANTES\n",vidas);
     }
 
+    printf("\nFIN DE JUEGO\n");
+    //liberacion del puntero 
     free(mat);
 
+    //fin del programa
     return 0;
 }
