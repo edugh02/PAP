@@ -9,15 +9,74 @@ C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(176): warning #549-D: variable "
   
 C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(219): warning #549-D: variable "pos" is used before its value is set
   
-C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(150): warning #549-D: variable "pos" is used before its value is set
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(359): error : a __global__ function call must be configured
   
-  Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(362): error : identifier "explotarTNT" is undefined
   
-C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(176): warning #549-D: variable "pos" is used before its value is set
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(365): error : identifier "explotarRx" is undefined
   
-C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(219): warning #549-D: variable "pos" is used before its value is set
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(375): error : a __global__ function call must be configured
   
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(378): error : identifier "explotarTNT" is undefined
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(381): error : identifier "explotarRx" is undefined
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(397): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(400): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(403): error : identifier "explotarRx" is undefined
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(411): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(414): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(417): error : identifier "explotarRx" is undefined
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(424): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(427): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(430): error : identifier "explotarRx" is undefined
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(439): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(442): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(445): error : identifier "explotarRx" is undefined
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(453): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(456): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(459): error : identifier "explotarRx" is undefined
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(466): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(469): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(472): error : identifier "explotarRx" is undefined
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(480): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(483): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(486): error : identifier "explotarRx" is undefined
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(494): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(497): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(500): error : identifier "explotarRx" is undefined
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(500): error : expected a ";"
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(572): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(576): error : a __global__ function call must be configured
+  
+C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(580): error : a __global__ function call must be configured
+  
+  34 errors detected in the compilation of "C:/TODO/GitHub archivos/PAP/PL1 CANDY/kernel.cu".
   kernel.cu
-  tmpxft_000027dc_00000000-7_kernel.cudafe1.cpp
-C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu(455): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
-  PL1 CANDY.vcxproj -> C:\TODO\GitHub archivos\PAP\PL1 CANDY\x64\Debug\PL1 CANDY.exe
+C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\BuildCustomizations\CUDA 12.0.targets(799,9): error MSB3721: El comando ""C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.0\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.0\include"  -G   --keep-dir x64\Debug  -maxrregcount=0  --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc143.pdb" -o "C:\TODO\GitHub archivos\PAP\PL1 CANDY\x64\Debug\kernel.cu.obj" "C:\TODO\GitHub archivos\PAP\PL1 CANDY\kernel.cu"" salió con el código 2.

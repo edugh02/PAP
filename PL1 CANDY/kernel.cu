@@ -143,7 +143,7 @@ __global__ void eliminar5(int* mat, int n, int m, int* vector,int fila,int colum
     int idx = threadIdx.x + blockDim.x * blockIdx.x;
     int idy = threadIdx.y + blockDim.y * blockIdx.y;
     bool centinela = false;
-    int pos;
+    int pos=fila*m+columna;
 
     if (vector[0] != -1) {
         mat[fila * m + columna] = 7;
@@ -164,12 +164,32 @@ __global__ void eliminar5(int* mat, int n, int m, int* vector,int fila,int colum
     }
 }
 
+void eliminar5_host(int* mat, int n, int m, int* vector, int fila, int columna) {
+
+    int* d_mat;
+    cudaMalloc((void**)&d_mat, n * m * sizeof(int));
+    //copiamos la matriz del host al kernel
+    cudaMemcpy(d_mat, mat, n * m * sizeof(int), cudaMemcpyHostToDevice);
+
+    // Definimos las dimensiones de los bloques y de la grid
+    dim3 block_size(32, 32);
+    dim3 num_blocks((n + block_size.x - 1) / block_size.x, (m + block_size.y - 1) / block_size.y);
+    // Llamamos al kernel "eliminar7oMas"
+    eliminar5<< <gridSize, blockSize >> > (d_mat, n, m, vector, fila, columna);
+
+    //copiamos de vuelva la matriz del kernel al host
+    cudaMemcpy(mat, d_mat, n * m * sizeof(int), cudaMemcpyDeviceToHost);
+
+    cudaFree(d_mat);
+}
+
 __global__ void eliminar6(int* mat, int n, int m, int* vector,int fila,int columna) {
     // Calcular las coordenadas x e y del hilo
     int idx = threadIdx.x + blockDim.x * blockIdx.x;
     int idy = threadIdx.y + blockDim.y * blockIdx.y;
     bool centinela = false;
-    int pos;
+    int pos = fila * m + columna;
+
 
     if (vector[0] != -1) {
         mat[fila * m + columna] = 8;
@@ -190,27 +210,54 @@ __global__ void eliminar6(int* mat, int n, int m, int* vector,int fila,int colum
     }
 }
 
-__global__ void eliminar7oMas(int* mat, int n, int m, int* vector,int fila,int columna) {
+
+void eliminar6_host(int* mat, int n, int m, int* vector, int fila, int columna) {
+
+    int* d_mat;
+    cudaMalloc((void**)&d_mat, n * m * sizeof(int));
+    //copiamos la matriz del host al kernel
+    cudaMemcpy(d_mat, mat, n * m * sizeof(int), cudaMemcpyHostToDevice);
+
+    // Definimos las dimensiones de los bloques y de la grid
+    dim3 block_size(32, 32);
+    dim3 num_blocks((n + block_size.x - 1) / block_size.x, (m + block_size.y - 1) / block_size.y);
+    // Llamamos al kernel "eliminar7oMas"
+    eliminar6 << <gridSize, blockSize >> > (d_mat, n, m, vector, fila, columna);
+
+    //copiamos de vuelva la matriz del kernel al host
+    cudaMemcpy(mat, d_mat, n * m * sizeof(int), cudaMemcpyDeviceToHost);
+
+    cudaFree(d_mat);
+}
+
+__global__ void eliminar7oMas(int* mat, int n, int m, int* vector,int fila,int columna, unsigned int ale, curandState* state) {
     // Calcular las coordenadas x e y del hilo
     int idx = threadIdx.x + blockDim.x * blockIdx.x;
     int idy = threadIdx.y + blockDim.y * blockIdx.y;
     bool centinela = false;
-    int pos;
+    int pos = fila * m + columna;
+
+    curand_init(ale, idy * m + idx, 0, &state[idy * m + idx]);
+    // Generar un número aleatorio entero entre "lim_inf" y "lim_sup"
+    int val_ale = curand(&state[idy * m + idx]) % 1 + 0;
+
+
+    //generar numero aleatorio que indicará que tipo de r se forma
 
     if (vector[0] != -1) {  //9-->R1 10-->R2 11-->R3 21-->R4 13-->R5 14-->R6
-        if (mat[vector[0]] == 1) {
+        if (val_ale == 1) {
             mat[fila * m + columna] = 9;
         }
-        else if (mat[vector[0]] == 2) {
+        else if (val_ale == 2) {
             mat[fila * m + columna] = 10;
         }
-        else if (mat[vector[0]] == 3) {
+        else if (val_ale == 3) {
             mat[fila * m + columna] = 11;
         }
-        else if (mat[vector[0]] == 4) {
+        else if (val_ale == 4) {
             mat[fila * m + columna] = 12;
         }
-        else if (mat[vector[0]] == 5) {
+        else if (val_ale == 5) {
             mat[fila * m + columna] = 13;
         }
         else {
@@ -233,72 +280,33 @@ __global__ void eliminar7oMas(int* mat, int n, int m, int* vector,int fila,int c
     }
 }
 
-void eliminar_elementos(int* matriz, int n, int m, int* vector,int fila,int columna) { 
-    int* d_matriz;
-    int* d_vector;
-    int tamVector = n*m;
 
-    // Alocar memoria para la matriz y el vector en la GPU
-    cudaMalloc((void**) & d_matriz, n * m * sizeof(int));
-    cudaMalloc((void**)&d_vector, tamVector * sizeof(int));
-
-    // Copiar la matriz y el vector de la CPU a la GPU
-    cudaMemcpy(d_matriz, matriz, n * m * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_vector, vector, tamVector * sizeof(int), cudaMemcpyHostToDevice);
-
-    // Definir la configuración del kernel
-    dim3 blockSize(16, 16);
-    dim3 gridSize((n + blockSize.x - 1) / blockSize.x, (m + blockSize.y - 1) / blockSize.y);
-
-    // Llamar al kernel
-    switch (cuantas_posiciones(vector, n, m)){
-    case 1: //TENEMOS QUE ACORDARNOS DE BORRAR LA PRIMERA POSICION DEL VECTOR, QUE SE HABRÁ RELLENADO
-        if (matriz[vector[0]] == 1 || matriz[vector[0]] == 2 || matriz[vector[0]] == 3 || matriz[vector[0]] == 4 || matriz[vector[0]] == 5 || matriz[vector[0]] == 6) {
-            --vidas;
-        }
-        else if (matriz[vector[0]] == 7) {
-            //BOMBA
-        }
-        else if (matriz[vector[0]] == 8) {
-            //TNT
-        }
-        else {
-            //Rx
-        }
-        vector[0] = -1;
-        break;
-    case 2:
-        eliminar_iguales_juntos << <gridSize, blockSize >> > (d_matriz, n, m, d_vector);
-        break;
-    case 3:
-        eliminar_iguales_juntos << <gridSize, blockSize >> > (d_matriz, n, m, d_vector);
-        break;
-    case 4:
-        eliminar_iguales_juntos << <gridSize, blockSize >> > (d_matriz, n, m, d_vector);
-        break;
-    case 5:
-        //Kernel sustituir el elemento de la posición por un B y borrar el resto
-        eliminar5 << <gridSize, blockSize >> > (d_matriz, n, m, d_vector,fila,columna);
-        break;
-    case 6:
-        //Kernel sustituir el elemento de la posición por un TNT y borrar el resto
-        eliminar6 << <gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna);
-        break;
-    default:
-        //Kernel sustituir el elemento de la posición por un Rx y borrar el resto
-        eliminar7oMas<< <gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna);
-        break;
-    }
+void eliminar7oMas_host(int* mat, int n, int m, int* vector, int fila, int columna, unsigned int ale, curandState* state) {
     
+    int* d_mat;
+    cudaMalloc((void**)&d_mat, n * m * sizeof(int));
+    //copiamos la matriz del host al kernel
+    cudaMemcpy(d_mat, mat, n * m * sizeof(int), cudaMemcpyHostToDevice);
 
-    // Copiar la matriz resultante de la GPU a la CPU
-    cudaMemcpy(matriz, d_matriz, n * m * sizeof(int), cudaMemcpyDeviceToHost);
-    cudaMemcpy(vector, d_vector, n * m * sizeof(int), cudaMemcpyDeviceToHost);
-    
-    // Liberar la memoria de la GPU
-    cudaFree(d_matriz);
-    cudaFree(d_vector);
-}
+    //generamos la semilla para luego crear un número aleatorio
+    curandState* d_state;
+    cudaMalloc((void**)&d_state, n * m * sizeof(curandState));
+    unsigned int ale = generate_seed();
+
+    // Definir las dimensiones de los bloques y de la grid
+    dim3 block_size(32, 32);
+    dim3 num_blocks((n + block_size.x - 1) / block_size.x, (m + block_size.y - 1) / block_size.y);
+    // Llamar al kernel "eliminar7oMas"
+    eliminar7oMas << <gridSize, blockSize >> > (d_mat, n, m, vector, fila, columna, ale, state);
+
+    //copiamos de vuelva la matriz del kernel al host
+    cudaMemcpy(mat, d_mat, n * m * sizeof(int), cudaMemcpyDeviceToHost);
+
+    cudaFree(d_mat);
+    cudaFree(d_state);
+
+ }
+
 
 
 
@@ -410,6 +418,226 @@ void rellenar_huecos_host(int* mat, int n, int m, int lim_inf, int lim_sup) {
 
     cudaFree(d_mat);
     cudaFree(d_state);
+}
+
+
+__global__ void explotarBomba(int* mat, int n, int m, int fila, int columna, unsigned int ale, curandState* state) {
+    int idx = threadIdx.x + blockDim.x * blockIdx.x;
+    int idy = threadIdx.y + blockDim.y * blockIdx.y;
+
+    curand_init(ale, idy * m + idx, 0, &state[idy * m + idx]);
+    // Generar un número aleatorio entero entre "lim_inf" y "lim_sup"
+    int tipo = curand(&state[idy * m + idx]) % 1 + 0;
+
+    if (tipo == 0) {//Eliminar la fila entera
+        for (int i = 0; i < idx; ++i) {
+            mat[fila * m + i] = -1;
+        }
+    }
+    else {//Eliminar la columna entera
+        for (int i = 0; i < idy; ++i) {
+            mat[i * m + columna] = -1;
+        }
+    }
+}
+
+
+
+void explotarBomba_host(int* mat, int n, int m, int* vector, int fila, int columna) {
+
+    int* d_mat;
+    cudaMalloc((void**)&d_mat, n * m * sizeof(int));
+    //copiamos la matriz del host al kernel
+    cudaMemcpy(d_mat, mat, n * m * sizeof(int), cudaMemcpyHostToDevice);
+
+    //generamos la semilla para luego crear un número aleatorio
+    curandState* d_state;
+    cudaMalloc((void**)&d_state, n * m * sizeof(curandState));
+    unsigned int ale = generate_seed();
+
+    // Definimos las dimensiones de los bloques y de la grid
+    dim3 block_size(32, 32);
+    dim3 num_blocks((n + block_size.x - 1) / block_size.x, (m + block_size.y - 1) / block_size.y);
+    // Llamamos al kernel "eliminar7oMas"
+    explotarBomba << <gridSize, blockSize >> > (d_mat, n, m, vector, fila, columna, ale, state);
+
+    //copiamos de vuelva la matriz del kernel al host
+    cudaMemcpy(mat, d_mat, n * m * sizeof(int), cudaMemcpyDeviceToHost);
+
+    cudaFree(d_mat);
+}
+
+__global__ void explotarTNT(int* mat, int n, int m, int fila, int columna) {                                          // ESTE HAY Q CAMBIARLO Q NO LO HE QUERIDO TOCAR
+    int idx = threadIdx.x + blockDim.x * blockIdx.x;
+    int idy = threadIdx.y + blockDim.y * blockIdx.y;
+    mat[fila * m + columna] = -1;
+    if (fila != 0) {
+        if (columna != 0) {
+            mat[(fila - 1) * m + columna - 1] = -1;
+        }
+        else if (columna != m - 1) {
+            mat[(fila - 1) * m + columna + 1] = -1; 
+        }
+        if (0 < mat[(fila - 1) * m + columna] && mat[(fila - 1) * m + columna] < 7) {
+            mat[(fila - 1) * m + columna] = -1;
+        }
+        else if (mat[(fila - 1) * m + columna] == 7) {
+            explotarBomba(mat, n, m, fila - 1, columna);
+        }
+        else if (mat[(fila - 1) * m + columna] == 8) {
+            explotarTNT(mat, n, m, fila - 1, columna);
+        }
+        else if (mat[(fila - 1) * m + columna] > 8) {
+            explotarRx(mat, n, m, fila - 1, columna, mat[(fila - 1) * m + columna]);
+        }
+    }
+    else if (fila != n - 1) {
+        if (columna != 0) {
+            mat[(fila + 1) * m + columna - 1] = -1;
+        }
+        else if (columna != m - 1) {
+            mat[(fila + 1) * m + columna + 1] = -1;
+        }
+        mat[(fila + 1) * m + columna] = -1;
+    }
+    if (columna != 0) {
+        mat[fila * m + columna - 1] = -1;
+    }
+    else if (columna != m - 1) {
+        mat[fila * m + columna + 1] = -1;
+    }
+}
+
+
+void explotarTNT_host(int* mat, int n, int m, int* vector, int fila, int columna) {
+
+    int* d_mat;
+    cudaMalloc((void**)&d_mat, n * m * sizeof(int));
+    //copiamos la matriz del host al kernel
+    cudaMemcpy(d_mat, mat, n * m * sizeof(int), cudaMemcpyHostToDevice);
+
+    // Definimos las dimensiones de los bloques y de la grid
+    dim3 block_size(32, 32);
+    dim3 num_blocks((n + block_size.x - 1) / block_size.x, (m + block_size.y - 1) / block_size.y);
+    // Llamamos al kernel "eliminar7oMas"
+    explotarTNT << <gridSize, blockSize >> > (d_mat, n, m, vector, fila, columna);
+
+    //copiamos de vuelva la matriz del kernel al host
+    cudaMemcpy(mat, d_mat, n * m * sizeof(int), cudaMemcpyDeviceToHost);
+
+    cudaFree(d_mat);
+}
+
+__global__ void explotarRx(int* matriz, int n, int m, int fila, int columna, int tipo) {                   //HACER HOST PARA ESTA, NO SABIA COMO SACAR EL TIPO
+    int idx = threadIdx.x + blockDim.x * blockIdx.x;
+    int idy = threadIdx.y + blockDim.y * blockIdx.y;
+    int pos = idy * m + idy;
+    switch (tipo) {
+    case 9:
+        if (matriz[pos] == 1) {
+            matriz[pos = -1];
+        }
+        break;
+    case 10:
+        if (matriz[pos] == 2) {
+            matriz[pos = -1];
+        }
+        break;
+    case 11:
+        if (matriz[pos] == 3) {
+            matriz[pos = -1];
+        }
+        break;
+    case 12:
+        if (matriz[pos] == 4) {
+            matriz[pos = -1];
+        }
+        break;
+    case 13:
+        if (matriz[pos] == 5) {
+            matriz[pos = -1];
+        }
+        break;
+    case 14:
+        if (matriz[pos] == 6) {
+            matriz[pos = -1];
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+
+
+void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int columna) {                       //AQUI HAY Q LLAMAR BIEN A LOS MÉTODOS DEL KERNEL
+    int* d_matriz;
+    int* d_vector;
+    int tamVector = n * m;
+
+    // Alocar memoria para la matriz y el vector en la GPU
+    cudaMalloc((void**)&d_matriz, n * m * sizeof(int));
+    cudaMalloc((void**)&d_vector, tamVector * sizeof(int));
+
+    // Copiar la matriz y el vector de la CPU a la GPU
+    cudaMemcpy(d_matriz, matriz, n * m * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_vector, vector, tamVector * sizeof(int), cudaMemcpyHostToDevice);
+
+    // Definir la configuración del kernel
+    dim3 blockSize(16, 16);
+    dim3 gridSize((n + blockSize.x - 1) / blockSize.x, (m + blockSize.y - 1) / blockSize.y);
+
+    // Llamar al kernel
+    switch (cuantas_posiciones(vector, n, m)) {
+    case 1: //TENEMOS QUE ACORDARNOS DE BORRAR LA PRIMERA POSICION DEL VECTOR, QUE SE HABRÁ RELLENADO
+        if (matriz[vector[0]] == 1 || matriz[vector[0]] == 2 || matriz[vector[0]] == 3 || matriz[vector[0]] == 4 || matriz[vector[0]] == 5 || matriz[vector[0]] == 6) {
+            --vidas;
+        }
+        else if (matriz[vector[0]] == 7) {
+            //BOMBA
+            explotarBomba(matriz, n, m, fila, columna);
+        }
+        else if (matriz[vector[0]] == 8) {
+            //TNT
+            explotarTNT(matriz, n, m, fila, columna);
+        }
+        else if (matriz[vector[0]] > 8) {
+            //Rx
+            explotarRx(matriz, n, m, fila, columna, matriz[fila * m + columna]);
+        }
+        vector[0] = -1;
+        break;
+    case 2:
+        eliminar_iguales_juntos << <gridSize, blockSize >> > (d_matriz, n, m, d_vector);
+        break;
+    case 3:
+        eliminar_iguales_juntos << <gridSize, blockSize >> > (d_matriz, n, m, d_vector);
+        break;
+    case 4:
+        eliminar_iguales_juntos << <gridSize, blockSize >> > (d_matriz, n, m, d_vector);
+        break;
+    case 5:
+        //Kernel sustituir el elemento de la posición por un B y borrar el resto
+        eliminar5 << <gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna);
+        break;
+    case 6:
+        //Kernel sustituir el elemento de la posición por un TNT y borrar el resto
+        eliminar6 << <gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna);
+        break;
+    default:
+        //Kernel sustituir el elemento de la posición por un Rx y borrar el resto
+        eliminar7oMas << <gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna);
+        break;
+    }
+
+
+    // Copiar la matriz resultante de la GPU a la CPU
+    cudaMemcpy(matriz, d_matriz, n * m * sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(vector, d_vector, n * m * sizeof(int), cudaMemcpyDeviceToHost);
+
+    // Liberar la memoria de la GPU
+    cudaFree(d_matriz);
+    cudaFree(d_vector);
 }
 
 
