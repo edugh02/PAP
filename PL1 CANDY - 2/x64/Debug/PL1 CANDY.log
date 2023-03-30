@@ -1,14 +1,18 @@
 ﻿  Compiling CUDA source file kernel.cu...
   
   C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.0\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.0\include"  -G   --keep-dir x64\Debug  -maxrregcount=0  --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc143.pdb" -o "C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\x64\Debug\kernel.cu.obj" "C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\kernel.cu" 
-C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\kernel.cu(663): warning #550-D: variable "tecla" was set but never used
+C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\kernel.cu(662): warning #550-D: variable "tecla" was set but never used
   
   Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
   
   kernel.cu
-  tmpxft_000024e0_00000000-7_kernel.cudafe1.cpp
-C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\kernel.cu(484): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
-C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\kernel.cu(662): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
-C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\kernel.cu(720): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
-C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\kernel.cu(723): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
+  tmpxft_00008c1c_00000000-7_kernel.cudafe1.cpp
+C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\kernel.cu(448): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
+C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\kernel.cu(550): warning C4244: 'inicializando': conversión de 'float' a 'int'; posible pérdida de datos
+C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\kernel.cu(551): warning C4244: 'inicializando': conversión de 'float' a 'int'; posible pérdida de datos
+C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\kernel.cu(562): warning C4244: '=': conversión de 'float' a 'int'; posible pérdida de datos
+C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\kernel.cu(563): warning C4244: '=': conversión de 'float' a 'int'; posible pérdida de datos
+C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\kernel.cu(661): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
+C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\kernel.cu(718): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
+C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\kernel.cu(721): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
   PL1 CANDY.vcxproj -> C:\TODO\GitHub archivos\PAP\PL1 CANDY - 2\x64\Debug\PL1 CANDY.exe

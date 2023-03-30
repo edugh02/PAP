@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <curand_kernel.h>
 #include <time.h>
+using namespace std;
 
 
 int vidas = 5;
@@ -281,7 +282,6 @@ void crear_vector(int* posicionesVistas, int n, int m) {
     cudaMalloc((void**)&d_v, n * m * sizeof(int));
 
     // Definir la configuración del kernel 
-    //TODO
     dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
     dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
 
@@ -310,7 +310,6 @@ void crear_matriz_aleatoria(int* mat, int n, int m, int lim_inf, int lim_sup) {
     //obtencion de una semilla que ayudara a la creacion de numeros aleatorios
     unsigned int ale = generate_seed();
 
-    //TODO
     dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
     dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
     matriz_aleatoria <<<num_blocks, block_size >> > (d_mat, n, m, lim_inf, lim_sup, ale, d_state);
@@ -339,7 +338,6 @@ void rellenar_huecos_host(int* mat, int n, int m, int lim_inf, int lim_sup) {
 
     unsigned int ale = generate_seed();
 
-    //TODO
     dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
     dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
     rellenar_huecos <<<num_blocks, block_size >> > (d_mat, n, m, lim_inf, lim_sup, ale, d_state);
@@ -530,45 +528,54 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
 }
 
 
-int mejoresCaracteristicas(int n, int m) {
-    // Obtener el número de dispositivos CUDA disponibles
-    int deviceCount;
-    cudaGetDeviceCount(&deviceCount);
+int minimo(int a, int b) {
+    return (a < b) ? a : b;
+}
 
-    if (deviceCount == 0) {
-        printf("No se encontraron dispositivos CUDA.\n");
-        return 0;
-    }
-
-    // Seleccionar el primer dispositivo
-    cudaSetDevice(0);
-
-    // Obtener las propiedades del dispositivo
+void mejoresCaracteristicas(int n, int m) {
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, 0);
 
+    // Calculamos el número máximo de bloques por multiprocesador
+    int max_blocks_per_sm = deviceProp.maxBlocksPerMultiProcessor;
 
-    //obtener el número de versión importante (major version) de la arquitectura de la GPU en la que se está ejecutando el kernel.
-    // Dimensionar el tamaño de bloque y la cantidad de bloques
-    HILOS_BLOQUE_X = 16;
-    HILOS_BLOQUE_Y = 16;// 16*16=256
+    // Calculamos el número máximo de hilos por multiprocesador
+    int max_threads_per_sm = deviceProp.maxThreadsPerMultiProcessor;
 
+    // Calculamos el número de hilos por bloque
+    int hilos_por_bloque_x = minimo(m, max_threads_per_sm);
+    int hilos_por_bloque_y = minimo(n, max_threads_per_sm);
 
-    if (deviceProp.major >= 2) {
-        HILOS_BLOQUE_X = 32;
-        HILOS_BLOQUE_Y = 16;// 32*16=512
+    // Calculamos el número de bloques por dimensión
+    int bloques_por_dim_x = ceil((float)m / hilos_por_bloque_x);
+    int bloques_por_dim_y = ceil((float)n / hilos_por_bloque_y);
+
+    // Limitamos el número de bloques a lanzar por multiprocesador
+    int bloques_por_sm = max_blocks_per_sm / (bloques_por_dim_x * bloques_por_dim_y);
+
+    // Calculamos el número de bloques a lanzar
+    int num_bloques = bloques_por_dim_x * bloques_por_dim_y;
+    if (hilos_por_bloque_x * hilos_por_bloque_y > max_threads_per_sm) {
+        num_bloques = minimo(num_bloques, bloques_por_sm * deviceProp.multiProcessorCount);
+        hilos_por_bloque_x = minimo(m, max_threads_per_sm / hilos_por_bloque_y);
+        hilos_por_bloque_y = minimo(n, max_threads_per_sm / hilos_por_bloque_x);
+        bloques_por_dim_x = ceil((float)m / hilos_por_bloque_x);
+        bloques_por_dim_y = ceil((float)n / hilos_por_bloque_y);
     }
 
-    if (deviceProp.major >= 3) {
-        HILOS_BLOQUE_X = 32;
-        HILOS_BLOQUE_Y = 32;// 32*32=1024;
-    }
+    // Asignamos los valores finales a las variables globales
+    BLOQUES_GRID_X = bloques_por_dim_x;
+    BLOQUES_GRID_Y = bloques_por_dim_y;
+    HILOS_BLOQUE_X = hilos_por_bloque_x;
+    HILOS_BLOQUE_Y = hilos_por_bloque_y;
 
-    BLOQUES_GRID_X = (n + HILOS_BLOQUE_X - 1) / HILOS_BLOQUE_X;
-    BLOQUES_GRID_Y = (m + HILOS_BLOQUE_Y - 1) / HILOS_BLOQUE_Y;
-
-    return 0;
+    printf("\n%d\n", HILOS_BLOQUE_X);
+    printf("\n%d\n", HILOS_BLOQUE_Y);
+    printf("\n%d\n", BLOQUES_GRID_X);
+    printf("\n%d\n", BLOQUES_GRID_Y);
 }
+
+
 
 //imprimir la matriz
 void imprimir(int* matriz, int n, int m) {
@@ -577,16 +584,20 @@ void imprimir(int* matriz, int n, int m) {
     for (int i = -1; i < n; i++) {
         for (int j = -1; j < m; j++) {
             if (i == -1 && j == -1) {
-                printf(" ");
+                printf("_");
             }
             else if (i == -1 && j >= 0) {
-                printf("|%d  ", j);
+                printf("|");
+                printf("\x1b[4m%d\x1b[0m", j);
+                printf("|");
+                printf(" ");
             }
             else if (i != -1 && j == -1) {
-                printf("%d|", i);
+                printf("\x1b[4m%d\x1b[0m", i);
+                printf("|");
             }
             else if (matriz[i * m + j] == -1) {
-                printf("    "); //elemento borrado, no se pone 
+                printf(" x  "); //elemento borrado, no se pone 
             }
             else if (matriz[i * m + j] == 1) {
                 sprintf(str, "%d", matriz[i * m + j]);
@@ -675,8 +686,7 @@ int main()
     int* posicionesVistas = (int*)malloc(n * m * sizeof(int)); //Vector donde se guardan posiciones adyacentes
     crear_vector(posicionesVistas, n, m);//Inicializa el vector
     crear_matriz_aleatoria(mat, n, m, lim_inf, lim_sup);//Inicializacion de la matriz
-
-    //TODO                                                                                 
+                                                               
     dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
     dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
 
@@ -684,7 +694,7 @@ int main()
     int fila=-1;
     int x = 0;
 
-    printf("\n%d VIDAS RESTANTES\n", vidas);
+    printf("\n\x1b[31;5;214m%d VIDAS RESTANTES\x1b[0m\n", vidas);
     imprimir(mat, n, m);
     printf("\n");
 

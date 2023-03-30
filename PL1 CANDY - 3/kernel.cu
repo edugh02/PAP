@@ -375,7 +375,6 @@ void caer_caramelos_host(int* matriz, int n, int m) {
     //copiamos del host al device
     cudaMemcpy(d_matriz, matriz, size, cudaMemcpyHostToDevice);
 
-    //TODO
     // Configurar la cantidad de hilos por bloque y la cantidad de bloques por cuadrícula
     dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
     dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
@@ -409,7 +408,6 @@ void crear_vector(int* posicionesVistas, int n, int m) {
     cudaMalloc((void**)&d_v, n * m * sizeof(int));
 
     // Definir la configuración del kernel 
-    //TODO
     dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
     dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
 
@@ -438,7 +436,6 @@ void crear_matriz_aleatoria(int* mat, int n, int m, int lim_inf, int lim_sup) {
     //obtencion de una semilla que ayudara a la creacion de numeros aleatorios
     unsigned int ale = generate_seed();
 
-    //TODO
     dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
     dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
     matriz_aleatoria <<<num_blocks, block_size >> > (d_mat, n, m, lim_inf, lim_sup, ale, d_state);
@@ -467,7 +464,6 @@ void rellenar_huecos_host(int* mat, int n, int m, int lim_inf, int lim_sup) {
 
     unsigned int ale = generate_seed();
 
-    //TODO
     dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
     dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
     rellenar_huecos <<<num_blocks, block_size >> > (d_mat, n, m, lim_inf, lim_sup, ale, d_state);
@@ -704,13 +700,17 @@ void imprimir(int* matriz, int n, int m) {
     for (int i = -1; i < n; i++) {
         for (int j = -1; j < m; j++) {
             if (i == -1 && j == -1) {
-                printf(" ");
+                printf("_");
             }
             else if (i == -1 && j >= 0) {
-                printf("|%d  ", j);
+                printf("|");
+                printf("\x1b[4m%d\x1b[0m", j);
+                printf("|");
+                printf(" ");
             }
             else if (i != -1 && j == -1) {
-                printf("%d|", i);
+                printf("\x1b[4m%d\x1b[0m", i);
+                printf("|");
             }
             else if (matriz[i * m + j] == -1) {
                 printf("    "); //elemento borrado, no se pone 
@@ -802,8 +802,7 @@ int main()
     int* posicionesVistas = (int*)malloc(n * m * sizeof(int)); //Vector donde se guardan posiciones adyacentes
     crear_vector(posicionesVistas, n, m);//Inicializa el vector
     crear_matriz_aleatoria(mat, n, m, lim_inf, lim_sup);//Inicializacion de la matriz
-
-    //TODO                                                                                 
+                                                                              
     dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
     dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
 
@@ -811,7 +810,7 @@ int main()
     int fila=-1;
     int x = 0;
 
-    printf("\n%d VIDAS RESTANTES\n", vidas);
+    printf("\n\x1b[31;5;214m%d VIDAS RESTANTES\x1b[0m\n", vidas);
     imprimir(mat, n, m);
     printf("\n");
 
