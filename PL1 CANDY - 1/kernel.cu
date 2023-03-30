@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <curand_kernel.h>
 #include <time.h>
+#include <iostream>
 
 
 int vidas = 5;
@@ -116,46 +117,34 @@ __global__ void eliminar_iguales_juntos(int* mat, int n, int m,int* vector) {
     // Calcular las coordenadas x e y del hilo
     int idx = threadIdx.x;
     int idy = threadIdx.y;
-    bool centinela = false;
-    int pos;
-
-    for (int i = 0; i < n * m; i++) {
-        if (vector[i] == idy * m + idx) {
-            centinela = true; // El número está presente en el vector
-            pos = i;
-        } 
-    }
 
     // Verificar si el hilo se encuentra dentro de los límites de la matriz y coincide con una posición que hay que eliminar
-    if (centinela) {
-        mat[idy * m + idx] = -1;
-        //el elemento deja de ser analizado
-        vector[pos] = -1;
+    for (int i = 0; i < n * m; i++) {
+        if (vector[i] == idy * m + idx) { // El número está presente en el vector
+            mat[idy * m + idx] = -1;
+            vector[i] = -1;
+            break;
+        }
     }
 }
+
 __global__ void eliminar5(int* mat, int n, int m, int* vector,int fila,int columna) {
     // Calcular las coordenadas x e y del hilo
     int idx = threadIdx.x;
     int idy = threadIdx.y;
-    bool centinela = false;
-    int pos=fila*m+columna;
     
     if (vector[0] == idy * m + idx) {
         mat[vector[0]] = 7;//Se pone una bomba en la posicion
         vector[0] = -1;
     }
 
-    for (int i = 1; i < n * m; i++) {
-        if (vector[i] == idy * m + idx) {
-            centinela = true; // El número está presente en el vector
-            pos = i;
-        }
-    }
-
     // Verificar si el hilo se encuentra dentro de los límites de la matriz y coincide con una posición que hay que eliminar
-    if (centinela) {
-        mat[idy * m + idx] = -1;
-        vector[pos] = -1;
+    for (int i = 1; i < n * m; i++) {
+        if (vector[i] == idy * m + idx) { // El número está presente en el vector
+            mat[idy * m + idx] = -1;
+            vector[i] = -1;
+            break;
+        }
     }
 }
 
@@ -163,25 +152,19 @@ __global__ void eliminar6(int* mat, int n, int m, int* vector,int fila,int colum
     // Calcular las coordenadas x e y del hilo
     int idx = threadIdx.x;
     int idy = threadIdx.y;
-    bool centinela = false;
-    int pos = fila * m + columna;
     
     if (vector[0] == idy * m + idx) {
         mat[fila * m + columna] = 8;//se pone una TNT en la posicion 
         vector[0] = -1;
     }
 
-    for (int i = 1; i < n * m; i++) {
-        if (vector[i] == idy * m + idx) {
-            centinela = true; // El número está presente en el vector
-            pos = i;
-        }
-    }
-
     // Verificar si el hilo se encuentra dentro de los límites de la matriz y coincide con una posición que hay que eliminar
-    if (centinela) {
-        mat[idy * m + idx] = -1;
-        vector[pos] = -1;
+    for (int i = 1; i < n * m; i++) {
+        if (vector[i] == idy * m + idx) { // El número está presente en el vector
+            mat[idy * m + idx] = -1;
+            vector[i] = -1;
+            break;
+        }
     }
 }
 
@@ -189,8 +172,7 @@ __global__ void eliminar7oMas(int* mat, int n, int m, int* vector,int fila,int c
     // Calcular las coordenadas x e y del hilo
     int idx = threadIdx.x;
     int idy = threadIdx.y;
-    bool centinela = false;
-    int pos;
+
     curand_init(ale, idy * m + idx, 0, &state[idy * m + idx]);
     // Generar un número aleatorio entero entre "lim_inf" y "lim_sup"
     int val_ale = curand(&state[idy * m + idx]) % lim_sup + lim_inf;
@@ -218,17 +200,12 @@ __global__ void eliminar7oMas(int* mat, int n, int m, int* vector,int fila,int c
         vector[0] = -1;
     }
 
-    for (int i = 1; i < n * m; i++) {
-        if (vector[i] == idy * m + idx) {
-            centinela = true; // El número está presente en el vector
-            pos = i;
-        }
-    }
-
     // Verificar si el hilo se encuentra dentro de los límites de la matriz y coincide con una posición que hay que eliminar
-    if (centinela) {
-        mat[idy * m + idx] = -1;
-        vector[pos] = -1;
+    for (int i = 1; i < n * m; i++) {
+        if (vector[i] == idy * m + idx) { // El número está presente en el vector
+            mat[idy * m + idx] = -1;
+            vector[i] = -1;
+        }
     }
 }
 
@@ -267,7 +244,6 @@ void caer_caramelos_host(int* matriz, int n, int m) {
     //copiamos del host al device
     cudaMemcpy(d_matriz, matriz, size, cudaMemcpyHostToDevice);
 
-    //TODO
     // Configurar la cantidad de hilos por bloque y la cantidad de bloques por cuadrícula
     dim3 tamBloque(m, n);
     dim3 tamCuadricula(1,1);
@@ -373,13 +349,9 @@ void rellenar_huecos_host(int* mat, int n, int m, int lim_inf, int lim_sup) {
 }
 
 
-__global__ void explotarBomba(int* mat, int n, int m, int fila, int columna, unsigned int ale, curandState* state,int* vector) {
+__global__ void explotarBomba(int* mat, int n, int m, int fila, int columna, int tipo,int* vector) {
     int idx = threadIdx.x;
     int idy = threadIdx.y;
-                                                                        //TODO falta hacer la concatenacion
-    curand_init(ale, idy * m + idx, 0, &state[idy * m + idx]);
-    // Generar un número aleatorio entero entre "lim_inf" y "lim_sup"
-    int tipo = curand(&state[idy * m + idx]) % 1 + 0;
 
     if (tipo == 0) {//Eliminar la columna entera
         if (idx == columna) {
@@ -398,45 +370,15 @@ __global__ void explotarBomba(int* mat, int n, int m, int fila, int columna, uns
 __global__ void explotarTNT(int* mat, int n, int m, int fila, int columna,int* vector) { 
     int idx = threadIdx.x;
     int idy = threadIdx.y;
-                                                                            //TODO falta hacer la concatenacion
+
     mat[fila * m + columna] = -1;
 
-    if (fila != 0 && idy==fila-1) {//comprobamos que no estamos en la primera fila
-        if (columna != 0 && idx== columna-1) { //comprobamos que no estamos en la primera columna para borrar el elemento de la izq
-            mat[idy * m + idx] = -1;
-        }
-        else if (columna != m && idx == columna + 1) { //comprobamos que no estamos en la ultima columna para borrar el elem de la der
-            mat[idy * m + idx] = -1;
-        }
-        else if (idx == columna) {
-            //comprobamos que que nosea la primera fila para borrar el de arriba
-            if (0 < mat[idy * m + idx] && mat[idy * m + idx] < 7) {
-                mat[idy * m + idx] = -1;
-            }
+    if (idx >= 0 && idx < m  && idy>=0 && idy < n ) {
+        if ((idx >= columna - 4 && idx <= columna + 4) && (idy >= fila - 4 && idy <= fila + 4)) {
+            mat[idy * n + idx] = -1;
         }
     }
-    else if (fila != n && idy == fila+1) { //comprobamos que la fila no es la última
-        if (columna != 0 && idx == columna-1) {//comprobamos que no estamos en la primera columna para borrar el elemento de la izq
-            mat[idy * m + idx] = -1;
-        }
-        else if (columna != m && idx == columna + 1) { //comprobamos que no estamos en la ultima columna para borrar el elem de la der
-            mat[idy * m + idx] = -1;
-        }
-        else if (idx == columna) {
-            //comprobamos que que nosea la primera fila para borrar el de arriba
-            if (0 < mat[idy * m + idx] && mat[idy * m + idx] < 7) {
-                mat[idy * m + idx] = -1;
-            }
-        }
-    }
-    //para borrar el elemento de la izq, comprobamos que no estamos en la primera columna
-    if (columna != 0 && idy==fila && idx == columna-1) {
-        mat[idy * m + idx] = -1;
-    }
-    //para borrar el elemento de la der, comprobamos que no estamos en la ultima columna
-    else if (columna != m && idy == fila && idx == columna + 1) {
-        mat[idy * m + idx] = -1;
-    }
+
     //el elemento deja de ser analizado
     vector[0] = -1;
 }
@@ -526,10 +468,8 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
             else if (matriz[vector[0]] == 7) {
                 //BOMBA
                 //generamos la semilla para luego crear un número aleatorio
-                curandState* d_state;
-                cudaMalloc((void**)&d_state, n * m * sizeof(curandState));
-                unsigned int ale = generate_seed();
-                explotarBomba <<<gridSize, blockSize >> > (d_matriz, n, m, fila, columna, ale, d_state,d_vector);
+                int ale = rand() % 2;
+                explotarBomba <<<gridSize, blockSize >> > (d_matriz, n, m, fila, columna, ale,d_vector);
             }
             else if (matriz[vector[0]] == 8) {
                 //TNT
@@ -553,20 +493,20 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
         case 4:
             eliminar_iguales_juntos <<<gridSize, blockSize >> > (d_matriz, n, m, d_vector);
             break;
-        //Hay 4 caramelos adyacentes (se boorran 5 elementos-->bomba)
+        //Hay 4 caramelos adyacentes (se borran 5 elementos-->bomba)
         case 5:
             //Kernel sustituir el elemento de la posición por un B y borrar el resto
             eliminar5 <<<gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna);
             break;
-        //Hay 5 caramelos adyacentes (se boorran 6 elementos-->TNT)
+        //Hay 5 caramelos adyacentes (se borran 6 elementos-->TNT)
         case 6:
             //Kernel sustituir el elemento de la posición por un TNT y borrar el resto
             eliminar6 <<<gridSize, blockSize >> > (d_matriz, n, m, d_vector, fila, columna);
             break;
-        //Hay 6 o mas caramelos adyacentes (se boorran 7 o mas elementos-->Rx)
+        //Hay 6 o mas caramelos adyacentes (se borran 7 o mas elementos-->Rx)
         default:
             //Kernel sustituir el elemento de la posición por un Rx y borrar el resto
-            int tipo = rand() % 6+1;
+            int tipo = rand() % lim_sup+lim_inf;
             //generamos la semilla para luego crear un número aleatorio
             curandState* d_state;
             cudaMalloc((void**)&d_state, n * m * sizeof(curandState));
@@ -586,43 +526,70 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
 
 //imprimir la matriz
 void imprimir(int* matriz, int n, int m) {
+    char str[10];
     printf("\n");
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < m; j++) {
-            if (matriz[i * m + j] == -1) {
+    for (int i = -1; i < n; i++) {
+        for (int j = -1; j < m; j++) {
+            if (i == -1 && j == -1) {
+                printf(" ");
+            }
+            else if (i == -1 && j >= 0) {
+                printf("|%d  ", j);
+            }
+            else if (i != -1 && j == -1) {
+                printf("%d|", i);
+            }
+            else if (matriz[i * m + j] == -1) {
                 printf("    "); //elemento borrado, no se pone 
-            }else if (matriz[i * m + j]==7) {
-                printf("B   ");//bomba
-            }else if (matriz[i * m + j] == 8) {
-                printf("T   ");//TNT
+            }else if (matriz[i * m + j] == 1) {
+                sprintf(str, "%d", matriz[i * m + j]);
+                printf("\x1b[36m%s   \x1b[0m", str);//elementos normales de la matriz
+            }else if (matriz[i * m + j] == 2) {
+                sprintf(str, "%d", matriz[i * m + j]);
+                printf("\x1b[31m%s   \x1b[0m", str);
+            }else if (matriz[i * m + j] == 3) {
+                sprintf(str, "%d", matriz[i * m + j]);
+                printf("\x1b[38;5;226m%s   \x1b[0m", str);
+            }else if (matriz[i * m + j] == 4) {
+                sprintf(str, "%d", matriz[i * m + j]);
+                printf("\x1b[32m%s   \x1b[0m", str);
+            }else if (matriz[i * m + j] == 5) {
+                sprintf(str, "%d", matriz[i * m + j]);
+                printf("\x1b[38;5;130m%s   \x1b[0m", str);
+            }else if (matriz[i * m + j] == 6) {
+                sprintf(str, "%d", matriz[i * m + j]);
+                printf("\x1b[38;5;165m%s   \x1b[0m", str);
+            }
+            else if (matriz[i * m + j] == 7) {
+                printf("\x1b[23;5;214mB   \x1b[0m");//Bomba
+            }
+            else if (matriz[i * m + j] == 8) {
+                printf("\x1b[23;5;214mT   \x1b[0m");//TNT
             }
             else if (matriz[i * m + j] == 9) {
-                printf("R1  ");//R1
+                printf("\x1b[36;5;214mR1  \x1b[0m");//R1
             }
             else if (matriz[i * m + j] == 10) {
-                printf("R2  ");//R2
+                printf("\x1b[31;5;214mR2  \x1b[0m");//R2
             }
             else if (matriz[i * m + j] == 11) {
-                printf("R3  ");//R3
+                printf("\x1b[38;5;226;5;214mR3  \x1b[0m");//R3
             }
             else if (matriz[i * m + j] == 12) {
-                printf("R4  ");//R4
+                printf("\x1b[32;5;214mR4  \x1b[0m");//R4
             }
             else if (matriz[i * m + j] == 13) {
-                printf("R5  ");//R5
+                printf("\x1b[38;5;130;5;214mR5  \x1b[0m");//R5
             }
             else if (matriz[i * m + j] == 14) {
-                printf("R6  ");//R6
-            }
-            else {
-                printf("%d   ", matriz[i * m + j]);//elementos normales de la matriz
+                printf("\x1b[38;5;165;5;214mR6  \x1b[0m");//R6
             }
         }
         printf("\n");
     }
 }
 
-
+            
 int main()
 {
     srand(time(NULL));
