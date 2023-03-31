@@ -48,7 +48,7 @@ int primer_vacio(int* vector, int n, int m) {
     return x;
 }
 
-
+//Obtención de todas las posiciones adyacentes
 void ver_candy(int* mat, int n, int m,int colum,int fila, int* vector,int elemento) {
     int caramelo = fila * m + colum;//posicion en la matriz de las coordenadas
 
@@ -373,11 +373,11 @@ __global__ void explotarTNT(int* mat, int n, int m, int fila, int columna, int* 
     int idx = threadIdx.x + blockDim.x * blockIdx.x;//coordenada de la fila del hilo
     int idy = threadIdx.y + blockDim.y * blockIdx.y;//coordenada de la columna del hilo
 
-    mat[fila * m + columna] = -1;
-
+    //Comprobacion de que la posicion del hilo esta dentro de la matriz
     if (idx >= 0 && idx < m && idy >= 0 && idy < n) {
+        //Comprobacion de que la posicion del hilo este dentro del radio de explosion
         if ((idx >= columna - 4 && idx <= columna + 4) && (idy >= fila - 4 && idy <= fila + 4)) {
-            mat[idy * n + idx] = -1;
+            mat[idy * m + idx] = -1;
         }
     }
 
@@ -527,7 +527,7 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
     cudaFree(d_vector);
 }
 
-
+//devuelve el minimo entre a y b
 int minimo(int a, int b) {
     return (a < b) ? a : b;
 }
@@ -569,10 +569,10 @@ void mejoresCaracteristicas(int n, int m) {
     HILOS_BLOQUE_X = hilos_por_bloque_x;
     HILOS_BLOQUE_Y = hilos_por_bloque_y;
 
-    printf("\n%d\n", HILOS_BLOQUE_X);
-    printf("\n%d\n", HILOS_BLOQUE_Y);
-    printf("\n%d\n", BLOQUES_GRID_X);
-    printf("\n%d\n", BLOQUES_GRID_Y);
+    printf("\n(Hilos/Bloque).x: %d\n", HILOS_BLOQUE_X);
+    printf("\n(Hilos/Bloque).y: %d\n", HILOS_BLOQUE_Y);
+    printf("\n(Bloques/Grid).x: %d\n", BLOQUES_GRID_X);
+    printf("\n(Bloques/Grid).y: %d\n", BLOQUES_GRID_Y);
 }
 
 
@@ -597,31 +597,31 @@ void imprimir(int* matriz, int n, int m) {
                 printf("|");
             }
             else if (matriz[i * m + j] == -1) {
-                printf(" x  "); //elemento borrado, no se pone 
+                printf("    "); //elemento borrado, no se pone 
             }
             else if (matriz[i * m + j] == 1) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[36m%s   \x1b[0m", str);//elementos normales de la matriz
+                printf("\x1b[36m%s   \x1b[0m", str);//caramelo azul, 1
             }
             else if (matriz[i * m + j] == 2) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[31m%s   \x1b[0m", str);
+                printf("\x1b[31m%s   \x1b[0m", str);//caramelo rojo, 2
             }
             else if (matriz[i * m + j] == 3) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[38;5;226m%s   \x1b[0m", str);
+                printf("\x1b[38;5;226m%s   \x1b[0m", str); //caramelo naranja, 3
             }
             else if (matriz[i * m + j] == 4) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[32m%s   \x1b[0m", str);
+                printf("\x1b[32m%s   \x1b[0m", str);// caramelo verde, 4
             }
             else if (matriz[i * m + j] == 5) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[38;5;130m%s   \x1b[0m", str);
+                printf("\x1b[38;5;130m%s   \x1b[0m", str);//caramelo marron, 5
             }
             else if (matriz[i * m + j] == 6) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[38;5;165m%s   \x1b[0m", str);
+                printf("\x1b[38;5;165m%s   \x1b[0m", str);//caramelo lila, 6
             }
             else if (matriz[i * m + j] == 7) {
                 printf("\x1b[23;5;214mB   \x1b[0m");//Bomba
@@ -741,11 +741,14 @@ int main()
         imprimir(mat, n, m);
         rellenar_huecos_host(mat, n, m, lim_inf, lim_sup);//donde haya elementos eliminados se ponen nuevos caramelos aleatorios
 
-        printf("\n%d VIDAS RESTANTES\n", vidas);
+        if (vidas == 0)printf("\n\x1b[31;5;214mTE HAS QUEDADO SIN VIDAS\x1b[0m\n");
+        else if (vidas > 1)printf("\n\x1b[31;5;214m%d VIDAS RESTANTES\x1b[0m\n", vidas);
+        else printf("\n\x1b[31;5;214m%d VIDA RESTANTE\x1b[0m\n", vidas);
+
         imprimir(mat, n, m);
     }
 
-    printf("\nFIN DE JUEGO\n");
+    printf("\n-----Trabajo realizado por Jaime Diez Buendia y Eduardo Garcia Huerta-----\n");
     //liberacion del puntero 
     free(mat);
 

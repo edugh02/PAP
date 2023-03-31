@@ -12,12 +12,6 @@
 int vidas = 5;
  //y filas, x columnas --> idy*columnas + idx ( idx es todos los .x)
 
-//inicialización tonta para ver que luego cambia
-int HILOS_BLOQUE_X = 777;
-int HILOS_BLOQUE_Y = 777;
-int BLOQUES_GRID_X = 777;
-int BLOQUES_GRID_Y = 777;
-
 // Esta función genera una semilla aleatoria basada en la hora actual.
 unsigned int generate_seed() {
     time_t t;
@@ -250,8 +244,8 @@ void caer_caramelos_host(int* matriz, int n, int m) {
     cudaMemcpy(d_matriz, matriz, size, cudaMemcpyHostToDevice);
 
     // Configurar la cantidad de hilos por bloque y la cantidad de bloques por cuadrícula
-    dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
-    dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
+    dim3 block_size(n, m);
+    dim3 num_blocks(1);
 
     // Llamar al kernel caer_caramelos
     caer_caramelos <<<num_blocks, block_size >> > (d_matriz, n, m);
@@ -282,8 +276,8 @@ void crear_vector(int* posicionesVistas, int n, int m) {
     cudaMalloc((void**)&d_v, n * m * sizeof(int));
 
     // Definir la configuración del kernel 
-    dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
-    dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
+    dim3 block_size(n, m);
+    dim3 num_blocks(1);
 
     // Llamar al kernel
     rellenar <<<num_blocks, block_size >> > (d_v, n, m);
@@ -310,8 +304,8 @@ void crear_matriz_aleatoria(int* mat, int n, int m, int lim_inf, int lim_sup) {
     //obtencion de una semilla que ayudara a la creacion de numeros aleatorios
     unsigned int ale = generate_seed();
 
-    dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
-    dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
+    dim3 block_size(n, m);
+    dim3 num_blocks(1);
     matriz_aleatoria <<<num_blocks, block_size >> > (d_mat, n, m, lim_inf, lim_sup, ale, d_state);
     
     //Copiamos en el host el resultado obtenido en el device
@@ -338,8 +332,8 @@ void rellenar_huecos_host(int* mat, int n, int m, int lim_inf, int lim_sup) {
 
     unsigned int ale = generate_seed();
 
-    dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
-    dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
+    dim3 block_size(n, m);
+    dim3 num_blocks(1);
     rellenar_huecos <<<num_blocks, block_size >> > (d_mat, n, m, lim_inf, lim_sup, ale, d_state);
 
     //Copiamos del device al host
@@ -373,11 +367,11 @@ __global__ void explotarTNT(int* mat, int n, int m, int fila, int columna,int* v
     int idx = threadIdx.x;
     int idy = threadIdx.y;
 
-    mat[fila * m + columna] = -1;
-
+    //Si el hilo está dentro de los limites de la matriz entra
     if (idx >= 0 && idx < m  && idy>=0 && idy < n ) {
+        //Si el hilo esta dentro del radio de explosion entra
         if ((idx >= columna - 4 && idx <= columna + 4) && (idy >= fila - 4 && idy <= fila + 4)) {
-            mat[idy * n + idx] = -1;
+            mat[idy * m + idx] = -1;
         }
     }
 
@@ -389,7 +383,7 @@ __global__ void explotarRx(int* matriz, int n, int m, int fila, int columna, int
     int idx = threadIdx.x;
     int idy = threadIdx.y;
     int pos = idy * m + idx;//posicion del hilo
-    matriz[fila*m+columna] = -1;
+    matriz[fila*m+columna] = -1;//posicion del caramelo Rx
     switch (tipo) {
         case 9://R1-->eliminacion de todos los 1 de la matriz
             if (matriz[pos] == 1) {
@@ -432,7 +426,7 @@ __global__ void eliminar1(int* mat, int* vector, int n, int m, int fila, int col
     int idx = threadIdx.x;
     int idy = threadIdx.y;
     int pos = idy * m + idx;//posicion del hilo
-    if (pos == fila * m + columna) {
+    if (pos == fila * m + columna) {//si el hilo es la posicion a borrar entra
         vector[0] = -1;
         mat[pos] = -1;
     }
@@ -455,8 +449,8 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
     cudaMemcpy(d_vector, vector, tamVector * sizeof(int), cudaMemcpyHostToDevice);
 
     // Definir la configuración del kernel
-    dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
-    dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
+    dim3 block_size(n, m);
+    dim3 num_blocks(1);
 
     // Llamar al kernel
     switch (cuantas_posiciones(vector, n, m)) {
@@ -526,55 +520,6 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
     cudaFree(d_vector);
 }
 
-
-int minimo(int a, int b) {
-    return (a < b) ? a : b;
-}
-
-void mejoresCaracteristicas(int n, int m) {
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
-
-    // Calculamos el número máximo de bloques por multiprocesador
-    int max_blocks_per_sm = deviceProp.maxBlocksPerMultiProcessor;
-
-    // Calculamos el número máximo de hilos por multiprocesador
-    int max_threads_per_sm = deviceProp.maxThreadsPerMultiProcessor;
-
-    // Calculamos el número de hilos por bloque
-    int hilos_por_bloque_x = minimo(m, max_threads_per_sm);
-    int hilos_por_bloque_y = minimo(n, max_threads_per_sm);
-
-    // Calculamos el número de bloques por dimensión
-    int bloques_por_dim_x = ceil((float)m / hilos_por_bloque_x);
-    int bloques_por_dim_y = ceil((float)n / hilos_por_bloque_y);
-
-    // Limitamos el número de bloques a lanzar por multiprocesador
-    int bloques_por_sm = max_blocks_per_sm / (bloques_por_dim_x * bloques_por_dim_y);
-
-    // Calculamos el número de bloques a lanzar
-    int num_bloques = bloques_por_dim_x * bloques_por_dim_y;
-    if (hilos_por_bloque_x * hilos_por_bloque_y > max_threads_per_sm) {
-        num_bloques = minimo(num_bloques, bloques_por_sm * deviceProp.multiProcessorCount);
-        hilos_por_bloque_x = minimo(m, max_threads_per_sm / hilos_por_bloque_y);
-        hilos_por_bloque_y = minimo(n, max_threads_per_sm / hilos_por_bloque_x);
-        bloques_por_dim_x = ceil((float)m / hilos_por_bloque_x);
-        bloques_por_dim_y = ceil((float)n / hilos_por_bloque_y);
-    }
-
-    // Asignamos los valores finales a las variables globales
-    BLOQUES_GRID_X = bloques_por_dim_x;
-    BLOQUES_GRID_Y = bloques_por_dim_y;
-    HILOS_BLOQUE_X = hilos_por_bloque_x;
-    HILOS_BLOQUE_Y = hilos_por_bloque_y;
-
-    printf("\n%d\n", HILOS_BLOQUE_X);
-    printf("\n%d\n", HILOS_BLOQUE_Y);
-    printf("\n%d\n", BLOQUES_GRID_X);
-    printf("\n%d\n", BLOQUES_GRID_Y);
-}
-
-
 //imprimir la matriz
 void imprimir(int* matriz, int n, int m) {
     char str[10];
@@ -599,27 +544,27 @@ void imprimir(int* matriz, int n, int m) {
             }
             else if (matriz[i * m + j] == 1) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[36m%s   \x1b[0m", str);//elementos normales de la matriz
+                printf("\x1b[36m%s   \x1b[0m", str);//caramelo azul, 1
             }
             else if (matriz[i * m + j] == 2) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[31m%s   \x1b[0m", str);
+                printf("\x1b[31m%s   \x1b[0m", str);//caramelo rojo, 2
             }
             else if (matriz[i * m + j] == 3) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[38;5;226m%s   \x1b[0m", str);
+                printf("\x1b[38;5;226m%s   \x1b[0m", str); //caramelo naranja, 3
             }
             else if (matriz[i * m + j] == 4) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[32m%s   \x1b[0m", str);
+                printf("\x1b[32m%s   \x1b[0m", str);// caramelo verde, 4
             }
             else if (matriz[i * m + j] == 5) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[38;5;130m%s   \x1b[0m", str);
+                printf("\x1b[38;5;130m%s   \x1b[0m", str);//caramelo marron, 5
             }
             else if (matriz[i * m + j] == 6) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[38;5;165m%s   \x1b[0m", str);
+                printf("\x1b[38;5;165m%s   \x1b[0m", str);//caramelo lila, 6
             }
             else if (matriz[i * m + j] == 7) {
                 printf("\x1b[23;5;214mB   \x1b[0m");//Bomba
@@ -671,8 +616,6 @@ int main()
     printf("Introduce el numero de columnas que quieres que tenga el tablero: \n");
     scanf("%d", &m);
 
-    mejoresCaracteristicas(n, m);
-
     int lim_inf = 1; // valor mínimo
     int lim_sup = 6; // valor máximo
     if (dificultad == 1) {
@@ -684,8 +627,8 @@ int main()
     crear_vector(posicionesVistas, n, m);//Inicializa el vector
     crear_matriz_aleatoria(mat, n, m, lim_inf, lim_sup);//Inicializacion de la matriz
                                                                                 
-    dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
-    dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
+    dim3 block_size(n, m);
+    dim3 num_blocks(1);
 
     int colum=-1;
     int fila=-1;
@@ -737,12 +680,15 @@ int main()
         caer_caramelos_host(mat, n, m);//caida de los caramelos que tengan elementos eliminados por debajo
         imprimir(mat, n, m);
         rellenar_huecos_host(mat, n, m, lim_inf, lim_sup);//donde haya elementos eliminados se ponen nuevos caramelos aleatorios
-
-        printf("\n%d VIDAS RESTANTES\n", vidas);
+        
+        if (vidas == 0)printf("\n\x1b[31;5;214mTE HAS QUEDADO SIN VIDAS\x1b[0m\n");
+        else if (vidas > 1)printf("\n\x1b[31;5;214m%d VIDAS RESTANTES\x1b[0m\n", vidas);
+        else printf("\n\x1b[31;5;214m%d VIDA RESTANTE\x1b[0m\n", vidas);
+        
         imprimir(mat, n, m);
     }
 
-    printf("\nFIN DE JUEGO\n");
+    printf("\n-----Trabajo realizado por Jaime Diez Buendia y Eduardo Garcia Huerta-----\n");
     //liberacion del puntero 
     free(mat);
 

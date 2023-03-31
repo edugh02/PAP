@@ -497,14 +497,14 @@ __global__ void explotarBomba(int* mat, int n, int m, int fila, int columna, int
 
 
 __global__ void explotarTNT(int* mat, int n, int m, int fila, int columna, int* vector) {
-    int idx = threadIdx.x;
-    int idy = threadIdx.y;
+    int idx = threadIdx.x + blockDim.x * blockIdx.x;//coordenada de la fila del hilo
+    int idy = threadIdx.y + blockDim.y * blockIdx.y;//coordenada de la columna del hilo
 
-    mat[fila * m + columna] = -1;
-
+    //Comprobacion de que la posicion del hilo esta dentro de la matriz
     if (idx >= 0 && idx < m && idy >= 0 && idy < n) {
+        //Comprobacion de que la posicion del hilo este dentro del radio de explosion
         if ((idx >= columna - 4 && idx <= columna + 4) && (idy >= fila - 4 && idy <= fila + 4)) {
-            mat[idy * n + idx] = -1;
+            mat[idy * m + idx] = -1;
         }
     }
 
@@ -640,7 +640,7 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
             curandState* d_state;
             cudaMalloc((void**)&d_state, n * m * sizeof(curandState));
             unsigned int ale = generate_seed();
-            eliminar7oMas <<<num_blocks, 256>> > (d_matriz, n, m, d_vector, fila, columna, ale, d_state,lim_sup,lim_inf);
+            eliminar7oMas <<<num_blocks, block_size >> > (d_matriz, n, m, d_vector, fila, columna, ale, d_state,lim_sup,lim_inf);
             break;
         }
 
@@ -654,43 +654,53 @@ void eliminar_elementos(int* matriz, int n, int m, int* vector, int fila, int co
 }
 
 
-int mejoresCaracteristicas(int n, int m) {
-    // Obtener el número de dispositivos CUDA disponibles
-    int deviceCount;
-    cudaGetDeviceCount(&deviceCount);
+//devuelve el minimo entre a y b
+int minimo(int a, int b) {
+    return (a < b) ? a : b;
+}
 
-    if (deviceCount == 0) {
-        printf("No se encontraron dispositivos CUDA.\n");
-        return 0;
-    }
-
-    // Seleccionar el primer dispositivo
-    cudaSetDevice(0);
-
-    // Obtener las propiedades del dispositivo
+//Calcula las mejores características para una mejor optimizacion
+void mejoresCaracteristicas(int n, int m) {
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, 0);
 
-    //obtener el número de versión importante (major version) de la arquitectura de la GPU en la que se está ejecutando el kernel.
-    // Dimensionar el tamaño de bloque y la cantidad de bloques
-    HILOS_BLOQUE_X = 16;
-    HILOS_BLOQUE_Y = 16;// 16*16=256
+    // Calculamos el número máximo de bloques por multiprocesador
+    int max_blocks_per_sm = deviceProp.maxBlocksPerMultiProcessor;
 
+    // Calculamos el número máximo de hilos por multiprocesador
+    int max_threads_per_sm = deviceProp.maxThreadsPerMultiProcessor;
 
-    if (deviceProp.major >= 2) {
-        HILOS_BLOQUE_X = 32;
-        HILOS_BLOQUE_Y = 16;// 32*16=512
+    // Calculamos el número de hilos por bloque
+    int hilos_por_bloque_x = minimo(m, max_threads_per_sm);
+    int hilos_por_bloque_y = minimo(n, max_threads_per_sm);
+
+    // Calculamos el número de bloques por dimensión
+    int bloques_por_dim_x = ceil((float)m / hilos_por_bloque_x);
+    int bloques_por_dim_y = ceil((float)n / hilos_por_bloque_y);
+
+    // Limitamos el número de bloques a lanzar por multiprocesador
+    int bloques_por_sm = max_blocks_per_sm / (bloques_por_dim_x * bloques_por_dim_y);
+
+    // Calculamos el número de bloques a lanzar
+    int num_bloques = bloques_por_dim_x * bloques_por_dim_y;
+    if (hilos_por_bloque_x * hilos_por_bloque_y > max_threads_per_sm) {
+        num_bloques = minimo(num_bloques, bloques_por_sm * deviceProp.multiProcessorCount);
+        hilos_por_bloque_x = minimo(m, max_threads_per_sm / hilos_por_bloque_y);
+        hilos_por_bloque_y = minimo(n, max_threads_per_sm / hilos_por_bloque_x);
+        bloques_por_dim_x = ceil((float)m / hilos_por_bloque_x);
+        bloques_por_dim_y = ceil((float)n / hilos_por_bloque_y);
     }
 
-    if (deviceProp.major >= 3) {
-        HILOS_BLOQUE_X = 32;
-        HILOS_BLOQUE_Y = 32;// 32*32=1024;
-    }
+    // Asignamos los valores finales a las variables globales
+    BLOQUES_GRID_X = bloques_por_dim_x;
+    BLOQUES_GRID_Y = bloques_por_dim_y;
+    HILOS_BLOQUE_X = hilos_por_bloque_x;
+    HILOS_BLOQUE_Y = hilos_por_bloque_y;
 
-    BLOQUES_GRID_X = (n + HILOS_BLOQUE_X - 1) / HILOS_BLOQUE_X;
-    BLOQUES_GRID_Y = (m + HILOS_BLOQUE_Y - 1) / HILOS_BLOQUE_Y;
-
-    return 0;
+    printf("\n(Hilos/Bloque).x: %d\n", HILOS_BLOQUE_X);
+    printf("\n(Hilos/Bloque).y: %d\n", HILOS_BLOQUE_Y);
+    printf("\n(Bloques/Grid).x: %d\n", BLOQUES_GRID_X);
+    printf("\n(Bloques/Grid).y: %d\n", BLOQUES_GRID_Y);
 }
 
 //imprimir la matriz
@@ -717,27 +727,27 @@ void imprimir(int* matriz, int n, int m) {
             }
             else if (matriz[i * m + j] == 1) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[36m%s   \x1b[0m", str);//elementos normales de la matriz
+                printf("\x1b[36m%s   \x1b[0m", str);//caramelo azul, 1
             }
             else if (matriz[i * m + j] == 2) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[31m%s   \x1b[0m", str);
+                printf("\x1b[31m%s   \x1b[0m", str);//caramelo rojo, 2
             }
             else if (matriz[i * m + j] == 3) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[38;5;226m%s   \x1b[0m", str);
+                printf("\x1b[38;5;226m%s   \x1b[0m", str); //caramelo naranja, 3
             }
             else if (matriz[i * m + j] == 4) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[32m%s   \x1b[0m", str);
+                printf("\x1b[32m%s   \x1b[0m", str);// caramelo verde, 4
             }
             else if (matriz[i * m + j] == 5) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[38;5;130m%s   \x1b[0m", str);
+                printf("\x1b[38;5;130m%s   \x1b[0m", str);//caramelo marron, 5
             }
             else if (matriz[i * m + j] == 6) {
                 sprintf(str, "%d", matriz[i * m + j]);
-                printf("\x1b[38;5;165m%s   \x1b[0m", str);
+                printf("\x1b[38;5;165m%s   \x1b[0m", str);//caramelo lila, 6
             }
             else if (matriz[i * m + j] == 7) {
                 printf("\x1b[23;5;214mB   \x1b[0m");//Bomba
@@ -802,7 +812,7 @@ int main()
     int* posicionesVistas = (int*)malloc(n * m * sizeof(int)); //Vector donde se guardan posiciones adyacentes
     crear_vector(posicionesVistas, n, m);//Inicializa el vector
     crear_matriz_aleatoria(mat, n, m, lim_inf, lim_sup);//Inicializacion de la matriz
-                                                                              
+
     dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
     dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
 
@@ -849,26 +859,22 @@ int main()
         
         int elemento = mat[fila * m + colum]; //caramelo en las coordenadas indicadas
         ver_candy(mat, n, m, colum, fila, posicionesVistas,elemento); //obtenemos un vector con todas los caramelos adyacentes al seleccionado, incluido el propio caramelo 
-
         printf("\n");
 
-        for (int i = 0; i < n * m; ++i) {
-            printf("%d ", posicionesVistas[i]);
-        }
-        printf("\n");
-
-        printf("\n");
         eliminar_elementos(mat, n, m, posicionesVistas,fila,colum,lim_sup,lim_inf);//Eliminacion de la posicion seleccionada y sus adyacentesç
         imprimir(mat, n, m);
         caer_caramelos_host(mat, n, m);//caida de los caramelos que tengan elementos eliminados por debajo
         imprimir(mat, n, m);
         rellenar_huecos_host(mat, n, m, lim_inf, lim_sup);//donde haya elementos eliminados se ponen nuevos caramelos aleatorios
 
-        printf("\n%d VIDAS RESTANTES\n", vidas);
+        if (vidas == 0)printf("\n\x1b[31;5;214mTE HAS QUEDADO SIN VIDAS\x1b[0m\n");
+        else if (vidas > 1)printf("\n\x1b[31;5;214m%d VIDAS RESTANTES\x1b[0m\n", vidas);
+        else printf("\n\x1b[31;5;214m%d VIDA RESTANTE\x1b[0m\n", vidas);
+
         imprimir(mat, n, m);
     }
 
-    printf("\nFIN DE JUEGO\n");
+    printf("\n-----Trabajo realizado por Jaime Diez Buendia y Eduardo Garcia Huerta-----\n");
     //liberacion del puntero 
     free(mat);
 
