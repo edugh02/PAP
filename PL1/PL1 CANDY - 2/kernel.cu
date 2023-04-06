@@ -689,7 +689,7 @@ int main()
                                                                
     dim3 block_size(HILOS_BLOQUE_X, HILOS_BLOQUE_Y);
     dim3 num_blocks(BLOQUES_GRID_X, BLOQUES_GRID_Y);
-
+    //Parte 2
     int colum=-1;
     int fila=-1;
     int x = 0;

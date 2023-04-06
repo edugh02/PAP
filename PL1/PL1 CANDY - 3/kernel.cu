@@ -819,7 +819,7 @@ int main()
     int colum=-1;
     int fila=-1;
     int x = 0;
-
+    //Parte3
     printf("\n\x1b[31;5;214m%d VIDAS RESTANTES\x1b[0m\n", vidas);
     imprimir(mat, n, m);
     printf("\n");

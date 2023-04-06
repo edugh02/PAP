@@ -624,7 +624,12 @@ int main()
     
     int* mat = (int*)malloc(n * m * sizeof(int)); // matriz aleatoria
     int* posicionesVistas = (int*)malloc(n * m * sizeof(int)); //Vector donde se guardan posiciones adyacentes
-    crear_vector(posicionesVistas, n, m);//Inicializa el vector
+    crear_vector(posicionesVistas, n, m);//Inicializa el 
+    printf("\n");
+    for (int i = 0; i < n * m; ++i) {
+        printf("%d ",posicionesVistas[i]);
+    }
+    printf("\n");
     crear_matriz_aleatoria(mat, n, m, lim_inf, lim_sup);//Inicializacion de la matriz
                                                                                 
     dim3 block_size(n, m);
@@ -675,6 +680,11 @@ int main()
         ver_candy(mat, n, m, colum, fila, posicionesVistas,elemento); //obtenemos un vector con todas los caramelos adyacentes al seleccionado, incluido el propio caramelo 
 
         printf("\n");
+        for (int i = 0; i < n * m; ++i) {
+            printf("%d ",posicionesVistas[i]);
+        }
+        printf("\n");
+
         eliminar_elementos(mat, n, m, posicionesVistas,fila,colum,lim_sup,lim_inf);//Eliminacion de la posicion seleccionada y sus adyacentesç
         imprimir(mat, n, m);
         caer_caramelos_host(mat, n, m);//caida de los caramelos que tengan elementos eliminados por debajo
