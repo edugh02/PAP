@@ -33,11 +33,11 @@ object Main {
     else agregarElemento(l.head, deja_n(l.tail,(n - 1)))
   }
 
-
   def quita_n(l: List[Int],n: Int): List[Int] = { // quita los n primeros
     if (n == 1) l.tail
     else quita_n( l.tail,(n - 1))
   }
+
   def imprimirMatriz(matriz: List[Int], n: Int, m: Int): Unit = {
     def imprimirFila(fila: List[Int]): Unit = {
       if (esVacia(fila)) {
@@ -76,6 +76,21 @@ object Main {
     else agregarElemento(aleatorio, crearMatrizAleatoria(posicion + 1, fila,columna,lim_inf, lim_sup))
   }
 
+  def jugar(vidas: Int, modo: Int, dificultad: Int, filas: Int, columnas: Int, lim_inf: Int, lim_sup: Int): Unit = {
+    val matriz: List[Int] = crearMatrizAleatoria(0,filas,columnas,lim_inf,lim_sup)
+    imprimirMatriz(matriz,filas,columnas)
+    if (vidas == 0) {
+      println("Has perdido, te has quedado sin vidas")
+    } else {
+      println("Introduce la fila de la casilla que quieres revisar: ")
+      val fila: Int = scala.io.StdIn.readInt()
+      println("Introduce la columna de la casilla que quieres revisar: ")
+      val columna: Int = scala.io.StdIn.readInt()
+      val posicion: Int = (fila-1)*columnas + (columna-1)
+
+    }
+  }
+
   def main(args: Array[String]): Unit = {
     val rnd = new Random(new Date().getTime())
     val tecla: Char = ' '
@@ -92,9 +107,9 @@ object Main {
     println(" 2. Normal")
     val dificultad: Int  = scala.io.StdIn.readInt()  //dificultad del juego
     println("Introduce el numero de filas que quieres que tenga el tablero:")
-    val n: Int  = scala.io.StdIn.readInt() // número de filas
+    val filas: Int  = scala.io.StdIn.readInt() // número de filas
     println("Introduce el numero de columnas que quieres que tenga el tablero:")
-    val m: Int  = scala.io.StdIn.readInt() //número de columnas
+    val columnas: Int  = scala.io.StdIn.readInt() //número de columnas
 
     var lim_inf: Int = 1 // valor mínimo
     var lim_sup: Int = 6 // valor máximo
@@ -102,5 +117,6 @@ object Main {
       lim_sup = 4 // valor máximo
     }
 
+    jugar(5,modo,dificultad,filas,columnas,lim_inf,lim_sup)
   }
 }
