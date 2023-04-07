@@ -74,56 +74,46 @@ object Main {
     else agregarElemento(getElem(matriz,posicion),eliminarElementos(matriz, vector, posicion+1,fila,columna))
   }
 //función para crear una matriz de tamaño n*m con valores aleatorios entre lim_inf y lim_sup
-  def crearMatrizAleatoria(posicion: Int, fila:Int, columna:Int, lim_inf: Int, lim_sup: Int): List[Int] = {
+  def crearMatrizAleatoria(posicion: Int, filas:Int, columnas:Int, lim_inf: Int, lim_sup: Int): List[Int] = {
     val random = new Random()
     val aleatorio = random.nextInt(lim_sup - lim_inf + 1) + lim_inf
-    if (posicion == fila*columna) Nil
-    else agregarElemento(aleatorio, crearMatrizAleatoria(posicion + 1, fila,columna,lim_inf, lim_sup))
+    if (posicion == filas*columnas) Nil
+    else agregarElemento(aleatorio, crearMatrizAleatoria(posicion + 1, filas,columnas,lim_inf, lim_sup))
   }
 
   //función que, aleatoriamente, pone a -1 la columna o la fila entera de la posicion en la que se encuentra la bomba
   def explotarBomba(matriz: List[Int], filas: Int, columnas: Int, filaObjetivo: Int, columnaObjetivo: Int): List[Int] = {
     val random = new Random()
-    val fila_o_columna: Int = random.nextInt(1) + 1
+    val fila_o_columna: Int = random.nextInt(2)
     if (fila_o_columna == 1) {
-      if(columnaObjetivo==0) explotarBombaPrimeraColumna(matriz, columnas,0)
-      else explotarBombaColumna(matriz, columnaObjetivo,0)
+      explotarBombaColumna(matriz, columnaObjetivo,filas,columnas,0,0)
     } else {
       explotarBombaFila(matriz,columnas, filaObjetivo,0)
     }
   }
 
-  //pone a -1 la columna  entera en la que se encuentra la bomba
-  def explotarBombaColumna(matriz: List[Int],columnaObjetivo: Int, posicion: Int): List[Int] = {
-    if (posicion==longitud(matriz)-1) Nil
-    else if (posicion%columnaObjetivo==0) agregarElemento(-1,explotarBombaColumna(matriz,columnaObjetivo,posicion+1))
-    else agregarElemento(getElem(matriz,posicion),explotarBombaColumna(matriz,columnaObjetivo,posicion+1))
+  // función que pone todos los elementos de la columna en la que se encuentra la bomba a -1
+  def explotarBombaColumna(matriz: List[Int], columnaObjetivo: Int, filas: Int, columnas: Int, n: Int, m: Int): List[Int] = {
+    if (n>filas-1 || m>columnas-1) Nil
+    else if (m == columnaObjetivo && m == columnas - 1) agregarElemento(-1, explotarBombaColumna(matriz, columnaObjetivo, filas, columnas, n + 1, 0))
+    else if (m == columnaObjetivo) agregarElemento(-1, explotarBombaColumna(matriz, columnaObjetivo, filas, columnas, n, m + 1))
+    else if (m == columnas - 1) agregarElemento(getElem(matriz, n*columnas + m), explotarBombaColumna(matriz, columnaObjetivo, filas, columnas, n + 1, 0))
+    else agregarElemento(getElem(matriz, n * columnas + m), explotarBombaColumna(matriz, columnaObjetivo, filas, columnas, n, m + 1))
   }
 
 
-  // caso especial, que pone a -1 la primera columna de la matriz                                              -->// CREO QUE NO ESTÁ BIEN, HAY Q PROBARLO
-  def explotarBombaPrimeraColumna(matriz: List[Int], filaObjetivo: Int, columnaObjetivo: Int): List[Int] = {
-    def explotarBombaPrimeraColumnaAux(matriz: List[Int], fila: Int, columna: Int): List[Int] = {
-      if (matriz.isEmpty) Nil
-      else if (fila == filaObjetivo && columna == columnaObjetivo) agregarElemento(-1,explotarBombaPrimeraColumnaAux(matriz.tail, fila + 1, columna))
-      else if (columna == 0) agregarElemento(-1,explotarBombaPrimeraColumnaAux(matriz.tail, fila + 1, columna))
-      else agregarElemento(matriz.head, explotarBombaPrimeraColumnaAux(matriz.tail, fila + 1, columna + 1))
-    }
-
-    explotarBombaPrimeraColumnaAux(matriz, 0, 0)
-  }
-
-
+  // función que pone todos los elementos de la fila en la que se encuentra la bomba a -1
   def explotarBombaFila(matriz: List[Int],columnas: Int, filaObjetivo: Int, posicion: Int): List[Int] = {
-    if (posicion==longitud(matriz)-1) Nil
+    if (posicion==longitud(matriz)) Nil
     else if (posicion/columnas==filaObjetivo) agregarElemento(-1,explotarBombaFila(matriz,columnas,filaObjetivo,posicion+1))
     else agregarElemento(getElem(matriz,posicion),explotarBombaFila(matriz,columnas,filaObjetivo,posicion+1))
   }
 
 
   def explotarRompecabezas(matriz: List[Int], filas: Int, columnas: Int, posicionElem: Int ,posicionActual: Int): List[Int] = {
-    if(getElem(matriz,posicion)==)
-    }
+    if (posicionActual == filas*columnas) Nil
+    else if(getElem(matriz,posicionElem)==getElem(matriz,posicionActual)) agregarElemento(-1,explotarRompecabezas(matriz,filas,columnas,posicionElem+1,posicionActual+1))
+    else agregarElemento(getElem(matriz,posicionActual),explotarRompecabezas(matriz,filas,columnas,posicionElem,posicionActual+1))
   }
 
   //función principal que determina la posición a investigar ejecuta las acciones correspondientes
@@ -144,6 +134,8 @@ object Main {
           println("\nCOORDENADAS NO VALIDAS, introduce unas coordenadas dentro del rango\n\n")
           jugar(vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup)
         }
+        imprimirMatriz(explotarBomba(matriz, filas, columnas, filaObjetivo, columnaObjetivo),filas,columnas)
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       }
       else{
         val random = new Random()
@@ -155,14 +147,14 @@ object Main {
         val posicion: Int = (filaObjetivo - 1) * columnas + (columnaObjetivo - 1)
         println("Pulsa enter para continuar")
         scala.io.StdIn.readLine()
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        jugar(vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup)
       }
 
     }
   }
 
   def main(args: Array[String]): Unit = {
-    println(contiene(List(1,2,3,4,5),7))
-    imprimirMatriz(crearMatrizAleatoria(0,6,7,1,6),6,7)
     //Obtencion de valores de modo de juego
     println("Bienvenido a Cundio Crack")
     println("Introduce el modo de juego con el que quieres jugar: ")
