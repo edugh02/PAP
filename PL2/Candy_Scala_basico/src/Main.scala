@@ -68,10 +68,10 @@ object Main {
     }
   }
 //función para eliminar todos los elementos de la matriz cuyas posiciones estén en el vector
-  def eliminarElementos(matriz: List[Int], vector: List[Int], posicion: Int, fila:Int, columna:Int): List[Int] = {
-    if(posicion==fila*columna) Nil
-    else if (contiene(vector,posicion)) agregarElemento(-1,eliminarElementos(matriz, vector, posicion+1,fila,columna))
-    else agregarElemento(getElem(matriz,posicion),eliminarElementos(matriz, vector, posicion+1,fila,columna))
+  def eliminarElementos(matriz: List[Int], vector: List[Int], posicion: Int, filas:Int, columnas:Int): List[Int] = {
+    if(posicion==filas*columnas) Nil
+    else if (contiene(vector,posicion)) agregarElemento(-1,eliminarElementos(matriz, vector, posicion+1,filas,columnas))
+    else agregarElemento(getElem(matriz,posicion),eliminarElementos(matriz, vector, posicion+1,filas,columnas))
   }
 //función para crear una matriz de tamaño n*m con valores aleatorios entre lim_inf y lim_sup
   def crearMatrizAleatoria(posicion: Int, filas:Int, columnas:Int, lim_inf: Int, lim_sup: Int): List[Int] = {
@@ -109,11 +109,21 @@ object Main {
     else agregarElemento(getElem(matriz,posicion),explotarBombaFila(matriz,columnas,filaObjetivo,posicion+1))
   }
 
+//función que pone a -1 los elementos de la matriz que estén en la misma fila o columna que el elemento en la posición indicada
+  def explotarRompecabezas(matriz: List[Int], filas: Int, columnas: Int, elem: Int ,posicionActual: Int): List[Int] = {
+    println("entrando a explotar")
+    if (posicionActual==filas*columnas) Nil
+    else if (elem == getElem(matriz, posicionActual)) agregarElemento(-1,explotarRompecabezas(matriz,filas,columnas,elem,posicionActual+1))
+    else agregarElemento(getElem(matriz,posicionActual),explotarRompecabezas(matriz,filas,columnas,elem,posicionActual+1))
+  }
 
-  def explotarRompecabezas(matriz: List[Int], filas: Int, columnas: Int, posicionElem: Int ,posicionActual: Int): List[Int] = {
-    if (posicionActual == filas*columnas) Nil
-    else if(getElem(matriz,posicionElem)==getElem(matriz,posicionActual)) agregarElemento(-1,explotarRompecabezas(matriz,filas,columnas,posicionElem+1,posicionActual+1))
-    else agregarElemento(getElem(matriz,posicionActual),explotarRompecabezas(matriz,filas,columnas,posicionElem,posicionActual+1))
+  def explotarTNT(matriz: List[Int], filas: Int, columnas: Int, filaObjetivo: Int, columnaObjetivo: Int, x: Int, y: Int): List[Int] = {
+    if (x > filas - 1 || y > columnas - 1) List()
+    else if (x <= filaObjetivo + 4 && x >= filaObjetivo - 4 && y <= columnaObjetivo + 4 && y >= columnaObjetivo - 4) {
+      if (y == columnas - 1) agregarElemento(-1, explotarTNT(matriz, filas, columnas, filaObjetivo, columnaObjetivo, x + 1, 0))
+      else agregarElemento(-1, explotarTNT(matriz, filas, columnas, filaObjetivo, columnaObjetivo, x, y + 1))
+    } else if (y == columnas - 1) agregarElemento(getElem(matriz, x*columnas + y), explotarTNT(matriz, filas, columnas, filaObjetivo, columnaObjetivo, x + 1, 0))
+    else agregarElemento(getElem(matriz, x*columnas + y), explotarTNT(matriz, filas, columnas, filaObjetivo, columnaObjetivo, x, y + 1))
   }
 
   //función principal que determina la posición a investigar ejecuta las acciones correspondientes
@@ -134,7 +144,7 @@ object Main {
           println("\nCOORDENADAS NO VALIDAS, introduce unas coordenadas dentro del rango\n\n")
           jugar(vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup)
         }
-        imprimirMatriz(explotarBomba(matriz, filas, columnas, filaObjetivo, columnaObjetivo),filas,columnas)
+        imprimirMatriz(explotarTNT(matriz, filas, columnas, filaObjetivo,columnaObjetivo ,0,0),filas,columnas)
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       }
       else{
