@@ -176,12 +176,13 @@ object Main {
     println("Introduce el numero de columnas que quieres que tenga el tablero:")
     val columnas: Int  = scala.io.StdIn.readInt() //número de columnas
 
-    var lim_inf: Int = 1 // valor mínimo
-    var lim_sup: Int = 6 // valor máximo
+    val lim_inf: Int = 1 // valor mínimo
     if (dificultad == 1) {
-      lim_sup = 4 // valor máximo
+      val lim_sup = 4 // valor máximo
+      jugar(5,modo,dificultad,filas,columnas,lim_inf,lim_sup)
+    }else{
+      val lim_sup: Int = 6 // valor máximo
+      jugar(5,modo,dificultad,filas,columnas,lim_inf,lim_sup)
     }
-
-    jugar(5,modo,dificultad,filas,columnas,lim_inf,lim_sup)
   }
 }
