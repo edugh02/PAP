@@ -120,6 +120,12 @@ object Main {
     else agregarElemento(getElem(matriz,posicion),explotarBombaFila(matriz,columnas,filaObjetivo,posicion+1))
   }
 
+
+  def explotarRompecabezas(matriz: List[Int], filas: Int, columnas: Int, posicionElem: Int ,posicionActual: Int): List[Int] = {
+    if(getElem(matriz,posicion)==)
+    }
+  }
+
   //función principal que determina la posición a investigar ejecuta las acciones correspondientes
   def jugar(vidas: Int, modo: Int, dificultad: Int, filas: Int, columnas: Int, lim_inf: Int, lim_sup: Int): Unit = {
     val matriz: List[Int] = crearMatrizAleatoria(0,filas,columnas,lim_inf,lim_sup)
