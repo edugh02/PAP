@@ -3,11 +3,12 @@ import java.util.Date
 
 object Main {
 
+  // funcion auxiliar para saber si una lista esta vacia
   def esVacia(l: List[Int]): Boolean = l match {
     case Nil => true
     case _ => false
   }
-
+// funcion auxiliar para saber si un elemento esta en una lista
   def contiene(lst: List[Int], n: Int): Boolean = {
     if (lst.isEmpty) {
       false
@@ -17,7 +18,7 @@ object Main {
       contiene(lst.tail, n)
     }
   }
-
+// funcion auxiliar para calcular la longitud de una lista
   def longitud[A](lista: List[A]): Int = {
     def auxiliar(lista: List[A], contador: Int): Int = lista match {
       case Nil => contador
@@ -27,22 +28,22 @@ object Main {
     auxiliar(lista, 0)
   }
 
-
+// es una funcion auxiliar para agregar elementos a una lista (es lo mismo que ::)
   def agregarElemento[A](elemento: A, lista: List[A]): List[A] = lista match {
     case Nil => elemento :: Nil
     case cabeza :: cola => elemento :: cabeza :: cola
   }
-
+  //función auxiliar para coger el elemento de la posicion index de una lista
   def getElem( matriz: List[Int],index: Int): Int = { //empezando por el índice 0
     if (index == 0) matriz.head
     else getElem(matriz.tail,(index - 1))
   }
-
+//función auxiliar identica a take
   def deja_n(l: List[Int],n: Int): List[Int] = { //devuelve una nueva lista con los n primeros
     if (n == 0) Nil
     else agregarElemento(l.head, deja_n(l.tail,(n - 1)))
   }
-
+  //función auxiliar identica a drop
   def quita_n(l: List[Int],n: Int): List[Int] = { // quita los n primeros
     if (n == 1) l.tail
     else quita_n( l.tail,(n - 1))
@@ -66,19 +67,13 @@ object Main {
         imprimirMatriz(quita_n(matriz,m), n, m)
     }
   }
-
-
-  def cuantas_vidas(vidasAntes: Int,quitarVida: Boolean): Int = {
-    if(quitarVida) vidasAntes-1
-    else vidasAntes
-  }
-
+//función para eliminar todos los elementos de la matriz cuyas posiciones estén en el vector
   def eliminarElementos(matriz: List[Int], vector: List[Int], posicion: Int, fila:Int, columna:Int): List[Int] = {
     if(posicion==fila*columna) Nil
     else if (contiene(vector,posicion)) agregarElemento(-1,eliminarElementos(matriz, vector, posicion+1,fila,columna))
     else agregarElemento(getElem(matriz,posicion),eliminarElementos(matriz, vector, posicion+1,fila,columna))
   }
-
+//función para crear una matriz de tamaño n*m con valores aleatorios entre lim_inf y lim_sup
   def crearMatrizAleatoria(posicion: Int, fila:Int, columna:Int, lim_inf: Int, lim_sup: Int): List[Int] = {
     val random = new Random()
     val aleatorio = random.nextInt(lim_sup - lim_inf + 1) + lim_inf
@@ -86,7 +81,7 @@ object Main {
     else agregarElemento(aleatorio, crearMatrizAleatoria(posicion + 1, fila,columna,lim_inf, lim_sup))
   }
 
-  //aleatoriamente, pone a -1 la columna o la fila entera de la posicion en la que se encuentra la bomba
+  //función que, aleatoriamente, pone a -1 la columna o la fila entera de la posicion en la que se encuentra la bomba
   def explotarBomba(matriz: List[Int], filas: Int, columnas: Int, filaObjetivo: Int, columnaObjetivo: Int): List[Int] = {
     val random = new Random()
     val fila_o_columna: Int = random.nextInt(1) + 1
@@ -125,6 +120,7 @@ object Main {
     else agregarElemento(getElem(matriz,posicion),explotarBombaFila(matriz,columnas,filaObjetivo,posicion+1))
   }
 
+  //función principal que determina la posición a investigar ejecuta las acciones correspondientes
   def jugar(vidas: Int, modo: Int, dificultad: Int, filas: Int, columnas: Int, lim_inf: Int, lim_sup: Int): Unit = {
     val matriz: List[Int] = crearMatrizAleatoria(0,filas,columnas,lim_inf,lim_sup)
     imprimirMatriz(matriz,filas,columnas)
