@@ -126,28 +126,81 @@ object Main {
     else agregarElemento(getElem(matriz, x*columnas + y), explotarTNT(matriz, filas, columnas, filaObjetivo, columnaObjetivo, x, y + 1))
   }
 
+
+  def primerVacio(vector: List[Int], n: Int, m: Int, pos: Int = 0): Int = {
+    if (getElem(vector,pos) == -1) pos
+    else if (pos == n * m - 1) -99 // no hay más elementos vacíos
+    else primerVacio(vector, n, m, pos + 1)
+  }
+
+  def estaEnVector(vector: List[Int], filas: Int, columnas: Int, posicionCandy: Int, posicionActual: Int=0): Boolean = {
+    if (posicionActual == longitud(vector)) false
+    else if (getElem(vector,posicionActual) == posicionCandy) true
+    else estaEnVector(vector, filas, columnas,posicionCandy, posicionActual + 1)
+  }
+
+  def reemplazarEnPosicion[A](lista: List[A], pos: Int, elem: A): List[A] = {
+    if (lista.isEmpty) Nil // Si la lista está vacía, no hay nada que reemplazar
+    else if (pos == 0) elem :: lista.tail // Si estamos en la posición 0, reemplazamos el primer elemento
+    else lista.head :: reemplazarEnPosicion(lista.tail, pos - 1, elem) // En otro caso, seguimos avanzando por la lista
+  }
+
+
+  //crear un vector de longitud filas*columnas y poner todos los elementos a -1
+  def crearVector(filas: Int, columnas: Int, posicion:Int=0): List[Int] = {
+    if (filas*columnas==posicion) Nil
+    else agregarElemento(-1,crearVector(filas,columnas,posicion+1))
+  }
+  def ver_candy(matriz: List[Int], filas: Int, columnas: Int, filaObjetivo: Int, columnaObjetivo: Int, vector: List[Int], elemento: Int): List[Int] = {
+    val caramelo = filaObjetivo * columnas + columnaObjetivo // Posición en la matriz de las coordenadas
+
+    // Comprobamos que la posición no ha sido ya insertada
+    if (!estaEnVector(vector, filas, columnas, caramelo) && getElem(matriz,caramelo) == elemento) {
+      // Insertamos en la primera posición que se encuentre vacía del vector, la posición del caramelo
+      val pos = primerVacio(vector, filas, columnas)
+      val vectorCambiado = reemplazarEnPosicion(vector, pos, caramelo)
+      if (filaObjetivo != 0) { // Adyacente de arriba
+        ver_candy(matriz, filas, columnas,  filaObjetivo - 1, columnaObjetivo, vectorCambiado, elemento)
+      }
+      if (filaObjetivo != filas - 1) { // Adyacente de abajo
+        ver_candy(matriz, filas, columnas, filaObjetivo + 1, columnaObjetivo, vectorCambiado, elemento)
+      }
+      if (columnaObjetivo != 0) { // Adyacente de la izquierda
+        ver_candy(matriz, filas, columnas, filaObjetivo, columnaObjetivo - 1, vectorCambiado, elemento)
+      }
+      if (columnaObjetivo != columnas - 1) { // Adyacente de la derecha
+        ver_candy(matriz, filas, columnas, filaObjetivo, columnaObjetivo + 1, vectorCambiado, elemento)
+      }
+      vectorCambiado
+    }
+    else vector
+  }
+
+
   //función principal que determina la posición a investigar ejecuta las acciones correspondientes
   def jugar(vidas: Int, modo: Int, dificultad: Int, filas: Int, columnas: Int, lim_inf: Int, lim_sup: Int): Unit = {
-    val matriz: List[Int] = crearMatrizAleatoria(0,filas,columnas,lim_inf,lim_sup)
-    imprimirMatriz(matriz,filas,columnas)
+    val matriz: List[Int] = crearMatrizAleatoria(0, filas, columnas, lim_inf, lim_sup)
+    imprimirMatriz(matriz, filas, columnas)
     if (vidas == 0) {
       println("Has perdido, te has quedado sin vidas")
     } else {
-      if(modo==2){ //obtencion de filas y columnas por parte del usuario
+      if (modo == 2) { //obtencion de filas y columnas por parte del usuario
         println("Introduce la fila de la casilla que quieres revisar: ")
         val filaObjetivo: Int = scala.io.StdIn.readInt()
         println("Introduce la columna de la casilla que quieres revisar: ")
         val columnaObjetivo: Int = scala.io.StdIn.readInt()
-        val posicion: Int = (filaObjetivo - 1) * columnas + (columnaObjetivo - 1)
+        val posicion: Int = (filaObjetivo) * columnas + (columnaObjetivo )
         //comprobamos si las coordenadas están dentro del rango de la matriz
         if (columnaObjetivo > columnas - 1 || filaObjetivo > filas - 1 || columnaObjetivo < 0 || filaObjetivo < 0) {
           println("\nCOORDENADAS NO VALIDAS, introduce unas coordenadas dentro del rango\n\n")
           jugar(vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup)
         }
-        imprimirMatriz(explotarTNT(matriz, filas, columnas, filaObjetivo,columnaObjetivo ,0,0),filas,columnas)
+        val vector=crearVector(filas,columnas)
+        val elemento = getElem(matriz,posicion); //caramelo en las coordenadas indicadas
+        imprimirMatriz(ver_candy(matriz,filas,columnas,filaObjetivo,columnaObjetivo,vector,elemento), filas, columnas)
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       }
-      else{
+      else {
         val random = new Random()
         //numeros aleatorios menores que filas y columnas
         val filaObjetivo: Int = random.nextInt(filas) + 1
@@ -163,6 +216,7 @@ object Main {
 
     }
   }
+
 
   def main(args: Array[String]): Unit = {
     //Obtencion de valores de modo de juego
