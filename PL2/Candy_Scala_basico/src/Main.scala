@@ -1,5 +1,4 @@
 import scala.util.Random
-import java.util.Date
 
 object Main {
 
@@ -33,55 +32,45 @@ object Main {
     case Nil => elemento :: Nil
     case cabeza :: cola => elemento :: cabeza :: cola
   }
+
+  // Función que concatena dos listas
+  def concatenar_Listas(lista1: List[Int], lista2: List[Int]): List[Int] = lista1 match {
+    case Nil => lista2
+    case cabeza :: resto => cabeza :: concatenar_Listas(resto, lista2)
+  }
+
   //función auxiliar para coger el elemento de la posicion index de una lista
   def getElem( matriz: List[Int],index: Int): Int = { //empezando por el índice 0
     if (index == 0) matriz.head
     else getElem(matriz.tail,(index - 1))
   }
+
   //función auxiliar identica a take
   def deja_n(l: List[Int],n: Int): List[Int] = { //devuelve una nueva lista con los n primeros
     if (n == 0) Nil
     else agregarElemento(l.head, deja_n(l.tail,(n - 1)))
   }
+
   //función auxiliar identica a drop
   def quita_n(l: List[Int],n: Int): List[Int] = { // quita los n primeros
     if (n == 1) l.tail
     else quita_n( l.tail,(n - 1))
   }
 
-  def imprimirMatriz(matriz: List[Int], n: Int, m: Int): Unit = {
-    def imprimirFila(fila: List[Int]): Unit = {
-      if (esVacia(fila)) {
-        println("") //[38;5;165;5;214m
-      } else {
-        if (fila.head == 1) print(s"\u001b[46m\u001b[30m ${fila.head} \u001b[0m")
-        else if (fila.head == 2) print(s"\u001b[41m\u001b[30m ${fila.head} \u001b[0m")
-        else if (fila.head == 3) print(s"\u001b[45m\u001b[30m ${fila.head} \u001b[0m")
-        else if (fila.head == 4) print(s"\u001b[42m\u001b[30m ${fila.head} \u001b[0m")
-        else if (fila.head == 5) print(s"\u001b[44m\u001b[30m ${fila.head} \u001b[0m")
-        else if (fila.head == 6) print(s"\u001b[43m\u001b[30m ${fila.head} \u001b[0m")
-        else if (fila.head == 7) print(s"\u001b[47m\u001b[30m B \u001b[0m") //bomba
-        else if (fila.head == 8) print(s"\u001b[47m\u001b[30mTNT\u001b[0m") //tnt
-        else if (fila.head == 9) print(s"\u001b[40m\u001b[36mR1 \u001b[0m") //r1
-        else if (fila.head == 10) print(s"\u001b[40m\u001b[31mR2 \u001b[0m") //r2
-        else if (fila.head == 11) print(s"\u001b[40m\u001b[35mR3 \u001b[0m") //r3
-        else if (fila.head == 12) print(s"\u001b[40m\u001b[32mR4 \u001b[0m") //r4
-        else if (fila.head == 13) print(s"\u001b[40m\u001b[34mR5 \u001b[0m") //r5
-        else if (fila.head == 14) print(s"\u001b[40m\u001b[33mR6 \u001b[0m") //r6
-        else if (fila.head == -1) print(s"\u001b[47m\u001b[37m   \u001b[0m") //vacío
-        else print(s"${fila.head}")
+//función que devuelve la columna solicitada de una matriz
+  def getColumna(columna: Int, num_columnas:Int, matriz: List[Int]): List[Int] = {
+    if (matriz.isEmpty || columna >= num_columnas) Nil
+    else getElem(matriz,columna) :: getColumna(columna, num_columnas, quita_n(matriz,num_columnas))
+  }
 
-        imprimirFila(fila.tail)
-      }
+//función que realiza la transpuesta de una matriz dada
+  def traspuesta(matriz: List[Int],num_filas: Int, num_columnas: Int): List[Int] = {
+    def trasp_aux(matriz: List[Int], columnaActual: Int): List[Int] = {
+      if (columnaActual >= num_columnas) Nil
+      else concatenar_Listas(getColumna(columnaActual, num_columnas, matriz), trasp_aux(matriz, columnaActual + 1))
     }
 
-    matriz match {
-      case Nil =>
-        println("---------")
-      case _ =>
-        imprimirFila(deja_n(matriz, m))
-        imprimirMatriz(quita_n(matriz, m), n, m)
-    }
+    trasp_aux(matriz, 0)
   }
 
   //función para eliminar todos los elementos de la matriz cuyas posiciones estén en el vector
@@ -169,6 +158,38 @@ object Main {
     matrizActualizada
   }
 
+  def dividir_en_columnas(matriz: List[Int], columnas: Int, posicion_columna: Int = 0): List[List[Int]] = {
+    if (posicion_columna == columnas) Nil
+    else {
+      getColumna(posicion_columna, columnas, matriz) :: dividir_en_columnas(matriz,columnas, posicion_columna + 1)
+    }
+  }
+
+  def caer_candy_columna(columna: List[Int], filas: Int, posicion_columna: Int = 0): List[Int] = {
+    if (posicion_columna == filas) columna
+    else if (getElem(columna, posicion_columna) == -1 && (posicion_columna != 0) && (getElem(columna, posicion_columna - 1) != -1)) {
+      val cambio1 = reemplazarEnPosicion(columna, posicion_columna, getElem(columna, posicion_columna - 1))
+      val cambio2 = reemplazarEnPosicion(cambio1, posicion_columna - 1, -1)
+
+      caer_candy_columna(cambio2, filas, 0)
+    }
+    else caer_candy_columna(columna, filas, posicion_columna + 1)
+  }
+
+
+  def aplicar_caer_todas_columnas(lista: List[List[Int]], filas: Int): List[Int] = {
+    if (lista.isEmpty) Nil
+    else concatenar_Listas(caer_candy_columna(lista.head, filas, 0), aplicar_caer_todas_columnas(lista.tail, filas))
+  }
+
+  def caer_caramelos(matriz: List[Int], filas: Int, columnas: Int): List[Int] = {
+    val listas = dividir_en_columnas(matriz, columnas)
+    val caido_al_reves = aplicar_caer_todas_columnas(listas, filas)
+    val caido_bien = traspuesta(caido_al_reves, columnas, filas)
+    imprimirMatriz(caido_bien, filas, columnas)
+    caido_bien
+  }
+
   def contador_borrados(matriz: List[Int],filas: Int, columnas: Int,posicion:Int): Int = {
     if (posicion== filas*columnas) 0
     else if (getElem(matriz,posicion) == -1) {
@@ -188,9 +209,124 @@ object Main {
     else rellenar_huecos(matriz, filas, columnas, posicion + 1, lim_inf, lim_sup)
   }
 
+
+  def imprimirMatriz(matriz: List[Int], n: Int, m: Int): Unit = {
+    def imprimirFila(fila: List[Int]): Unit = {
+      if (esVacia(fila)) {
+        println("") //[38;5;165;5;214m
+      } else {
+        if (fila.head == 1) print(s"\u001b[46m\u001b[30m ${fila.head} \u001b[0m")
+        else if (fila.head == 2) print(s"\u001b[41m\u001b[30m ${fila.head} \u001b[0m")
+        else if (fila.head == 3) print(s"\u001b[45m\u001b[30m ${fila.head} \u001b[0m")
+        else if (fila.head == 4) print(s"\u001b[42m\u001b[30m ${fila.head} \u001b[0m")
+        else if (fila.head == 5) print(s"\u001b[44m\u001b[30m ${fila.head} \u001b[0m")
+        else if (fila.head == 6) print(s"\u001b[43m\u001b[30m ${fila.head} \u001b[0m")
+        else if (fila.head == 7) print(s"\u001b[47m\u001b[30m B \u001b[0m") //bomba
+        else if (fila.head == 8) print(s"\u001b[47m\u001b[30mTNT\u001b[0m") //tnt
+        else if (fila.head == 9) print(s"\u001b[40m\u001b[36mR1 \u001b[0m") //r1
+        else if (fila.head == 10) print(s"\u001b[40m\u001b[31mR2 \u001b[0m") //r2
+        else if (fila.head == 11) print(s"\u001b[40m\u001b[35mR3 \u001b[0m") //r3
+        else if (fila.head == 12) print(s"\u001b[40m\u001b[32mR4 \u001b[0m") //r4
+        else if (fila.head == 13) print(s"\u001b[40m\u001b[34mR5 \u001b[0m") //r5
+        else if (fila.head == 14) print(s"\u001b[40m\u001b[33mR6 \u001b[0m") //r6
+        else if (fila.head == -1) print(s"\u001b[47m\u001b[37m   \u001b[0m") //vacío
+        else print(s"${fila.head}")
+
+        imprimirFila(fila.tail)
+      }
+    }
+
+    matriz match {
+      case Nil =>
+        println("---------")
+      case _ =>
+        imprimirFila(deja_n(matriz, m))
+        imprimirMatriz(quita_n(matriz, m), n, m)
+    }
+  }
+
+  def imprimirListaDeListas(lista: List[List[Int]]): Unit = {
+    for (fila <- lista) {
+      for (elem <- fila) {
+        print(elem + " ")
+      }
+      println()
+    }
+  }
+
+  def ejecutar_funcionalidad(matriz : List[Int],vidas:Int, filas:Int,columnas:Int,filaObjetivo:Int,columnaObjetivo:Int,modo: Int, dificultad: Int, lim_inf: Int, lim_sup: Int): Unit = {
+
+    val posicion: Int = (filaObjetivo) * columnas + (columnaObjetivo)
+    val elemento = getElem(matriz, posicion)
+    if (elemento < 7) {
+      val matrizElementosBorrados = ver_candy(matriz, filas, columnas, filaObjetivo, columnaObjetivo, elemento)
+      imprimirMatriz(matrizElementosBorrados, filas, columnas)
+
+      val contador = contador_borrados(matrizElementosBorrados, filas, columnas, 0)
+      if (contador == 1) {
+        val candys_caidos = caer_caramelos(matrizElementosBorrados, filas, columnas)
+        val nuevaMatriz_menosvida = rellenar_huecos(candys_caidos, filas, columnas, 0, lim_inf, lim_sup)
+        jugar(nuevaMatriz_menosvida, vidas - 1, modo, dificultad, filas, columnas, lim_inf, lim_sup)
+      }
+      else if (contador == 5) {
+        //Se forma Bomba
+        val matrizB = reemplazarEnPosicion(matrizElementosBorrados, filaObjetivo * columnas + columnaObjetivo, 7)
+        val candys_caidos = caer_caramelos(matrizB, filas, columnas)
+        val nuevaMatrizB = rellenar_huecos(candys_caidos, filas, columnas, 0, lim_inf, lim_sup)
+        jugar(nuevaMatrizB, vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup)
+      }
+      else if (contador == 6) {
+        val matrizTNT = reemplazarEnPosicion(matrizElementosBorrados, filaObjetivo * columnas + columnaObjetivo, 8)
+        val candys_caidos = caer_caramelos(matrizTNT, filas, columnas)
+        val nuevaMatrizTNT = rellenar_huecos(candys_caidos, filas, columnas, 0, lim_inf, lim_sup)
+        jugar(nuevaMatrizTNT, vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup)
+      }
+      else if (contador >= 7) {
+        //Se forma rompecabezas
+        val random = new Random()
+        val rx: Int = random.nextInt(lim_sup) + 9
+        val matrizRx = reemplazarEnPosicion(matrizElementosBorrados, filaObjetivo * columnas + columnaObjetivo, rx)
+        val candys_caidos = caer_caramelos(matrizRx, filas, columnas)
+        val nuevaMatrizRx = rellenar_huecos(candys_caidos, filas, columnas, 0, lim_inf, lim_sup)
+        jugar(nuevaMatrizRx, vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup)
+      }
+      else {
+        //de 2 a 4
+        val candys_caidos = caer_caramelos(matrizElementosBorrados, filas, columnas)
+        val nuevaMatriz = rellenar_huecos(candys_caidos, filas, columnas, 0, lim_inf, lim_sup)
+        jugar(nuevaMatriz, vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup)
+      }
+      //caramelo en las coordenadas indicadas
+    } else if (elemento == 7) {
+      val matrizBombaExplotada = explotarBomba(matriz, filas, columnas, filaObjetivo, columnaObjetivo)
+      imprimirMatriz(matrizBombaExplotada, filas, columnas)
+      val candys_caidos = caer_caramelos(matrizBombaExplotada, filas, columnas)
+      val matrizBombaExplotada_rellenada = rellenar_huecos(candys_caidos, filas, columnas, 0, lim_inf, lim_sup)
+      jugar(matrizBombaExplotada_rellenada, vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup)
+    }
+    else if (elemento == 8) {
+      val matrizTNTExplotada = explotarTNT(matriz, filas, columnas, filaObjetivo, columnaObjetivo, 0, 0)
+      imprimirMatriz(matrizTNTExplotada, filas, columnas)
+      val candys_caidos = caer_caramelos(matrizTNTExplotada, filas, columnas)
+      val matrizTNTExplotada_rellenada = rellenar_huecos(candys_caidos, filas, columnas, 0, lim_inf, lim_sup)
+      jugar(matrizTNTExplotada_rellenada, vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup)
+    }
+    else if (elemento >= 9) {
+      val matrizRompecabezasExplotada = explotarRompecabezas(matriz, filas, columnas, elemento - 8, 0)
+      val matriz_sin_rx = reemplazarEnPosicion(matrizRompecabezasExplotada, filaObjetivo * columnas + columnaObjetivo, -1)
+      imprimirMatriz(matriz_sin_rx, filas, columnas)
+      val candys_caidos = caer_caramelos(matriz_sin_rx, filas, columnas)
+      val matrizRompecabezasExplotada_rellenada = rellenar_huecos(candys_caidos, filas, columnas, 0, lim_inf, lim_sup)
+      jugar(matrizRompecabezasExplotada_rellenada, vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup)
+    }
+  }
+
+
   //función principal que determina la posición a investigar ejecuta las acciones correspondientes
   def jugar(matriz:List[Int], vidas: Int, modo: Int, dificultad: Int, filas: Int, columnas: Int, lim_inf: Int, lim_sup: Int): Unit = {
     imprimirMatriz(matriz, filas, columnas)
+    println("\nVIDAS: " + vidas)
+
     if (vidas == 0) {
       println("Has perdido, te has quedado sin vidas")
     } else {
@@ -199,68 +335,12 @@ object Main {
         val filaObjetivo: Int = scala.io.StdIn.readInt()
         println("Introduce la columna de la casilla que quieres revisar: ")
         val columnaObjetivo: Int = scala.io.StdIn.readInt()
-        val posicion: Int = (filaObjetivo) * columnas + (columnaObjetivo )
         //comprobamos si las coordenadas están dentro del rango de la matriz
         if (columnaObjetivo > columnas - 1 || filaObjetivo > filas - 1 || columnaObjetivo < 0 || filaObjetivo < 0) {
           println("\nCOORDENADAS NO VALIDAS, introduce unas coordenadas dentro del rango\n\n")
           jugar(matriz,vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup)
         }
-        val elemento = getElem(matriz,posicion)
-        if (elemento<7){
-          val matrizElementosBorrados = ver_candy(matriz,filas,columnas,filaObjetivo,columnaObjetivo,elemento)
-          imprimirMatriz(matrizElementosBorrados, filas, columnas)
-
-          val contador = contador_borrados(matrizElementosBorrados,filas,columnas,0)
-          if (contador == 1){
-            val nuevaMatriz_menosvida = rellenar_huecos(matrizElementosBorrados,filas,columnas,0,lim_inf,lim_sup)
-            jugar(nuevaMatriz_menosvida,vidas-1,modo,dificultad,filas,columnas,lim_inf,lim_sup)
-          }
-          else if (contador==5){
-            //Se forma Bomba
-            val matrizB = reemplazarEnPosicion(matrizElementosBorrados,filaObjetivo*columnas+columnaObjetivo,7)
-            val nuevaMatrizB = rellenar_huecos(matrizB,filas,columnas,0,lim_inf,lim_sup)
-            jugar(nuevaMatrizB,vidas,modo,dificultad,filas,columnas,lim_inf,lim_sup)
-          }
-          else if (contador==6) {
-            val matrizTNT = reemplazarEnPosicion(matrizElementosBorrados,filaObjetivo*columnas+columnaObjetivo,8)
-            val nuevaMatrizTNT = rellenar_huecos(matrizTNT,filas,columnas,0,lim_inf,lim_sup)
-            jugar(nuevaMatrizTNT,vidas,modo,dificultad,filas,columnas,lim_inf,lim_sup)
-          }
-          else if (contador>=7){
-            //Se forma rompecabezas
-            val random = new Random()
-            val rx: Int = random.nextInt(lim_sup) + 9
-            val matrizRx = reemplazarEnPosicion(matrizElementosBorrados,filaObjetivo*columnas+columnaObjetivo,rx)
-            val nuevaMatrizRx = rellenar_huecos(matrizRx,filas,columnas,0,lim_inf,lim_sup)
-            jugar(nuevaMatrizRx,vidas,modo,dificultad,filas,columnas,lim_inf,lim_sup)
-          }
-          else {
-            //de 2 a 4
-            val nuevaMatriz = rellenar_huecos(matrizElementosBorrados,filas,columnas,0,lim_inf,lim_sup)
-            jugar(nuevaMatriz,vidas,modo,dificultad,filas,columnas,lim_inf,lim_sup)
-          }
-          //caramelo en las coordenadas indicadas
-        }else if (elemento ==7 ){
-          val matrizBombaExplotada = explotarBomba(matriz,filas,columnas,filaObjetivo,columnaObjetivo)
-          imprimirMatriz(matrizBombaExplotada,filas,columnas)
-          val matrizBombaExplotada_rellenada = rellenar_huecos(matrizBombaExplotada,filas,columnas,0,lim_inf,lim_sup)
-          jugar(matrizBombaExplotada_rellenada,vidas,modo,dificultad,filas,columnas,lim_inf,lim_sup)
-        }
-        else if (elemento ==8 ) {
-          val matrizTNTExplotada = explotarTNT(matriz,filas,columnas,filaObjetivo,columnaObjetivo,0,0)
-          imprimirMatriz(matrizTNTExplotada,filas,columnas)
-          val matrizTNTExplotada_rellenada = rellenar_huecos(matrizTNTExplotada,filas,columnas,0,lim_inf,lim_sup)
-          jugar(matrizTNTExplotada_rellenada,vidas,modo,dificultad,filas,columnas,lim_inf,lim_sup)
-        }
-        else if (elemento >=9 ) {
-          val matrizRompecabezasExplotada = explotarRompecabezas(matriz,filas, columnas,elemento-8,0)
-          val matriz_sin_rx = reemplazarEnPosicion(matrizRompecabezasExplotada,filaObjetivo*columnas+columnaObjetivo,-1)
-          imprimirMatriz(matriz_sin_rx,filas,columnas)
-          val matrizRompecabezasExplotada_rellenada = rellenar_huecos(matriz_sin_rx,filas,columnas,0,lim_inf,lim_sup)
-          jugar(matrizRompecabezasExplotada_rellenada,vidas,modo,dificultad,filas,columnas,lim_inf,lim_sup)
-        }
-
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ejecutar_funcionalidad(matriz, vidas, filas, columnas, filaObjetivo, columnaObjetivo, modo, dificultad,lim_inf, lim_sup)
       }
       else {
         val random = new Random()
@@ -272,10 +352,8 @@ object Main {
         val posicion: Int = (filaObjetivo - 1) * columnas + (columnaObjetivo - 1)
         println("Pulsa enter para continuar")
         scala.io.StdIn.readLine()
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        jugar(matriz,vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup)
+        ejecutar_funcionalidad(matriz, vidas, filas, columnas, filaObjetivo, columnaObjetivo, modo, dificultad,lim_inf, lim_sup)
       }
-
     }
   }
 
