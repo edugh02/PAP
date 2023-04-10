@@ -254,6 +254,33 @@ object Main {
     }
   }
 
+  //contamos cuantos caramelos iguales hay juntos
+  def contar_adyacencias(matriz: List[Int], filas: Int, columnas: Int, filaObjetivo: Int, columnaObjetivo: Int, elemento: Int): Int = {
+    val temporal = ver_candy(matriz, filas, columnas, filaObjetivo, columnaObjetivo, elemento)
+    //ayudándonos de ver candy, que nos marca en la matriz, todos los elementos adyacentes iguales al elemento objetivo con un -1,
+    //nos aprovechamos de esto y simplemente contamos cuantos -1 hay en la matriz
+    contador_borrados(temporal, filas, columnas, 0)
+  }
+
+  def mejores_coordenadas(matriz: List[Int], filas: Int, columnas: Int, mejor_fila: Int=0, mejor_columna: Int=0, fila_ini: Int=0, columna_Ini: Int=0, valorMejorAdyacencia: Int = 0): (Int, Int) = {
+    if (fila_ini == filas && columna_Ini == columnas) (mejor_fila, mejor_columna)
+    else if (columna_Ini == columnas) mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini + 1, 0, valorMejorAdyacencia)
+    else {
+      val posicion: Int = (fila_ini) * columnas + (columna_Ini)
+      val elemento = getElem(matriz, posicion)
+      if (elemento < 7) {
+
+        val adyacencias = contar_adyacencias(matriz, filas, columnas, fila_ini, columna_Ini, elemento)
+        if (adyacencias > valorMejorAdyacencia) mejores_coordenadas(matriz, filas, columnas, fila_ini, columna_Ini, fila_ini, columna_Ini + 1, adyacencias)
+        else mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini, columna_Ini + 1, valorMejorAdyacencia)
+      }
+      else if (elemento == 7) mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini, columna_Ini + 1, 100)
+      else if (elemento == 8) mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini, columna_Ini + 1, 200)
+      else mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini, columna_Ini + 1, 300)
+    }
+  }
+
+
   def ejecutar_funcionalidad(matriz : List[Int],vidas:Int, filas:Int,columnas:Int,filaObjetivo:Int,columnaObjetivo:Int,modo: Int, dificultad: Int, lim_inf: Int, lim_sup: Int): Unit = {
 
     val posicion: Int = (filaObjetivo) * columnas + (columnaObjetivo)
@@ -343,11 +370,7 @@ object Main {
         ejecutar_funcionalidad(matriz, vidas, filas, columnas, filaObjetivo, columnaObjetivo, modo, dificultad,lim_inf, lim_sup)
       }
       else {
-        val random = new Random()
-        //numeros aleatorios menores que filas y columnas
-        val filaObjetivo: Int = random.nextInt(filas)
-        println("Fila escogida: " + filaObjetivo)
-        val columnaObjetivo: Int = random.nextInt(columnas)
+        val (filaObjetivo, columnaObjetivo) = mejores_coordenadas(matriz, filas, columnas)
         println("Columna escogida: " + columnaObjetivo)
         println("Pulsa enter para continuar")
         scala.io.StdIn.readLine()
