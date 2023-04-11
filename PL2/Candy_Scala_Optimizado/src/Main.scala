@@ -263,20 +263,25 @@ object Main {
   }
 
   def mejores_coordenadas(matriz: List[Int], filas: Int, columnas: Int, mejor_fila: Int=0, mejor_columna: Int=0, fila_ini: Int=0, columna_Ini: Int=0, valorMejorAdyacencia: Int = 0): (Int, Int) = {
-    if (fila_ini == filas && columna_Ini == columnas) (mejor_fila, mejor_columna)
+    if (fila_ini == filas) (mejor_fila, mejor_columna)
     else if (columna_Ini == columnas) mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini + 1, 0, valorMejorAdyacencia)
     else {
       val posicion: Int = (fila_ini) * columnas + (columna_Ini)
       val elemento = getElem(matriz, posicion)
       if (elemento < 7) {
-
         val adyacencias = contar_adyacencias(matriz, filas, columnas, fila_ini, columna_Ini, elemento)
         if (adyacencias > valorMejorAdyacencia) mejores_coordenadas(matriz, filas, columnas, fila_ini, columna_Ini, fila_ini, columna_Ini + 1, adyacencias)
         else mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini, columna_Ini + 1, valorMejorAdyacencia)
       }
-      else if (elemento == 7) mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini, columna_Ini + 1, 100)
-      else if (elemento == 8) mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini, columna_Ini + 1, 200)
-      else mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini, columna_Ini + 1, 300)
+      else if (elemento == 7) {
+        mejores_coordenadas(matriz, filas, columnas, fila_ini, columna_Ini, fila_ini, columna_Ini + 1, 100)
+      }
+      else if (elemento == 8){
+        mejores_coordenadas(matriz, filas, columnas, fila_ini, columna_Ini, fila_ini, columna_Ini + 1, 200)
+      }
+      else {
+        mejores_coordenadas(matriz, filas, columnas, fila_ini, columna_Ini, fila_ini, columna_Ini + 1, 300)
+      }
     }
   }
 
@@ -371,6 +376,7 @@ object Main {
       }
       else {
         val (filaObjetivo, columnaObjetivo) = mejores_coordenadas(matriz, filas, columnas)
+        println("Fila escogida: " + filaObjetivo)
         println("Columna escogida: " + columnaObjetivo)
         println("Pulsa enter para continuar")
         scala.io.StdIn.readLine()
