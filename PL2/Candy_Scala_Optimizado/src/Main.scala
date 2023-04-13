@@ -190,7 +190,7 @@ object Main {
     caido_bien
   }
 
-  def contador_borrados(matriz: List[Int],filas: Int, columnas: Int,posicion:Int): Int = {
+  def contador_borrados(matriz: List[Int],filas: Int, columnas: Int,posicion:Int=0): Int = {
     if (posicion== filas*columnas) 0
     else if (getElem(matriz,posicion) == -1) {
       1+contador_borrados(matriz,filas,columnas,posicion+1)
@@ -262,25 +262,34 @@ object Main {
     contador_borrados(temporal, filas, columnas, 0)
   }
 
-  def mejores_coordenadas(matriz: List[Int], filas: Int, columnas: Int, mejor_fila: Int=0, mejor_columna: Int=0, fila_ini: Int=0, columna_Ini: Int=0, valorMejorAdyacencia: Int = 0): (Int, Int) = {
+  def mejores_coordenadas(matriz: List[Int], filas: Int, columnas: Int, mejor_fila: Int=0, mejor_columna: Int=0, fila_ini: Int=0, columna_ini: Int=0, valorMejorAdyacencia: Int = 0): (Int, Int) = {
     if (fila_ini == filas) (mejor_fila, mejor_columna)
-    else if (columna_Ini == columnas) mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini + 1, 0, valorMejorAdyacencia)
+    else if (columna_ini == columnas) mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini + 1, 0, valorMejorAdyacencia)
     else {
-      val posicion: Int = (fila_ini) * columnas + (columna_Ini)
+      val posicion: Int = (fila_ini) * columnas + (columna_ini)
       val elemento = getElem(matriz, posicion)
       if (elemento < 7) {
-        val adyacencias = contar_adyacencias(matriz, filas, columnas, fila_ini, columna_Ini, elemento)
-        if (adyacencias > valorMejorAdyacencia) mejores_coordenadas(matriz, filas, columnas, fila_ini, columna_Ini, fila_ini, columna_Ini + 1, adyacencias)
-        else mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini, columna_Ini + 1, valorMejorAdyacencia)
+        val adyacencias = contar_adyacencias(matriz, filas, columnas, fila_ini, columna_ini, elemento)
+        if (adyacencias > valorMejorAdyacencia) mejores_coordenadas(matriz, filas, columnas, fila_ini, columna_ini, fila_ini, columna_ini + 1, adyacencias)
+        else mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini, columna_ini + 1, valorMejorAdyacencia)
       }
       else if (elemento == 7) {
-        mejores_coordenadas(matriz, filas, columnas, fila_ini, columna_Ini, fila_ini, columna_Ini + 1, 100)
+        val matriz_temporal = explotarBomba(matriz, filas, columnas, fila_ini, fila_ini)
+        val borrados = contador_borrados(matriz_temporal, filas, columnas)
+        if (borrados > valorMejorAdyacencia) mejores_coordenadas(matriz, filas, columnas, fila_ini, columna_ini, fila_ini, columna_ini + 1, borrados)
+        else mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini, columna_ini + 1, valorMejorAdyacencia)
       }
       else if (elemento == 8){
-        mejores_coordenadas(matriz, filas, columnas, fila_ini, columna_Ini, fila_ini, columna_Ini + 1, 200)
+        val matriz_temporal = explotarTNT(matriz, filas, columnas, fila_ini, fila_ini,0,0)
+        val borrados = contador_borrados(matriz_temporal, filas, columnas)
+        if (borrados > valorMejorAdyacencia) mejores_coordenadas(matriz, filas, columnas, fila_ini, columna_ini, fila_ini, columna_ini + 1, borrados)
+        else mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini, columna_ini + 1, valorMejorAdyacencia)
       }
       else {
-        mejores_coordenadas(matriz, filas, columnas, fila_ini, columna_Ini, fila_ini, columna_Ini + 1, 300)
+        val matriz_temporal = explotarRompecabezas(matriz, filas, columnas, elemento-8,0)
+        val borrados = contador_borrados(matriz_temporal, filas, columnas)
+        if (borrados > valorMejorAdyacencia) mejores_coordenadas(matriz, filas, columnas, fila_ini, columna_ini, fila_ini, columna_ini + 1, borrados)
+        else mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini, columna_ini + 1, valorMejorAdyacencia)
       }
     }
   }
