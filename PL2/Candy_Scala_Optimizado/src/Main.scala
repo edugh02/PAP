@@ -7,7 +7,7 @@ object Main {
     case Nil => true
     case _ => false
   }
-  // funcion auxiliar para saber si un elemento esta en una lista
+  // funcion auxiliar para saber si un elemento está en una lista
   def contiene(lst: List[Int], n: Int): Boolean = {
     if (lst.isEmpty) {
       false
@@ -45,13 +45,13 @@ object Main {
     else getElem(matriz.tail,(index - 1))
   }
 
-  //función auxiliar identica a take
-  def deja_n(l: List[Int],n: Int): List[Int] = { //devuelve una nueva lista con los n primeros
+  //función auxiliar identica a take que devuelve una nueva lista con los n primeros elem
+  def deja_n(l: List[Int],n: Int): List[Int] = {
     if (n == 0) Nil
     else agregarElemento(l.head, deja_n(l.tail,(n - 1)))
   }
 
-  //función auxiliar identica a drop
+  //función auxiliar identica a drop que devuelve una nueva lista sin los n primeros elem
   def quita_n(l: List[Int],n: Int): List[Int] = { // quita los n primeros
     if (n == 1) l.tail
     else quita_n( l.tail,(n - 1))
@@ -122,6 +122,7 @@ object Main {
     else agregarElemento(getElem(matriz,posicionActual),explotarRompecabezas(matriz,filas,columnas,elem,posicionActual+1))
   }
 
+  //función que pone a -1 los elementos de la matriz que estén en un rango de 4 posiciones de la fila y columna del caramelo en las coordenadas indicadas
   def explotarTNT(matriz: List[Int], filas: Int, columnas: Int, filaObjetivo: Int, columnaObjetivo: Int, x: Int, y: Int): List[Int] = {
     if (x > filas - 1 || y > columnas - 1) List()
     else if (x <= filaObjetivo + 4 && x >= filaObjetivo - 4 && y <= columnaObjetivo + 4 && y >= columnaObjetivo - 4) {
@@ -131,12 +132,14 @@ object Main {
     else agregarElemento(getElem(matriz, x*columnas + y), explotarTNT(matriz, filas, columnas, filaObjetivo, columnaObjetivo, x, y + 1))
   }
 
+  // función que devuelve una lista igual a la dada pero con el elemento en la posición indicada reemplazado por el elemento dado
   def reemplazarEnPosicion[A](lista: List[A], pos: Int, elem: A): List[A] = {
     if (lista.isEmpty) Nil // Si la lista está vacía, no hay nada que reemplazar
     else if (pos == 0) elem :: lista.tail // Si estamos en la posición 0, reemplazamos el primer elemento
     else lista.head :: reemplazarEnPosicion(lista.tail, pos - 1, elem) // En otro caso, seguimos avanzando por la lista
   }
 
+  // función que pone a -1 todos los elementos adyacantes al de la posicion dada que sean iguales que elemento
   def ver_candy(matriz: List[Int], filas: Int, columnas: Int, filaObjetivo: Int, columnaObjetivo: Int, elemento: Int): List[Int] = {
     val caramelo = filaObjetivo * columnas + columnaObjetivo
     val matrizActualizada =
@@ -158,6 +161,7 @@ object Main {
     matrizActualizada
   }
 
+  // función que devuelve una lista con los elementos de la matriz que están en la columna dada
   def dividir_en_columnas(matriz: List[Int], columnas: Int, posicion_columna: Int = 0): List[List[Int]] = {
     if (posicion_columna == columnas) Nil
     else {
@@ -165,8 +169,10 @@ object Main {
     }
   }
 
+  // funcición que hace subir los elementos de la columna que sean -1
   def caer_candy_columna(columna: List[Int], filas: Int, posicion_columna: Int = 0): List[Int] = {
     if (posicion_columna == filas) columna
+      //si el caramelo es -1 y el de arriba no lo es, se cambian de posición
     else if (getElem(columna, posicion_columna) == -1 && (posicion_columna != 0) && (getElem(columna, posicion_columna - 1) != -1)) {
       val cambio1 = reemplazarEnPosicion(columna, posicion_columna, getElem(columna, posicion_columna - 1))
       val cambio2 = reemplazarEnPosicion(cambio1, posicion_columna - 1, -1)
@@ -176,12 +182,14 @@ object Main {
     else caer_candy_columna(columna, filas, posicion_columna + 1)
   }
 
-
+// es un aplicador, que aplica a todas las columnas la función caer_candy_columna y después las concatena
   def aplicar_caer_todas_columnas(lista: List[List[Int]], filas: Int): List[Int] = {
     if (lista.isEmpty) Nil
     else concatenar_Listas(caer_candy_columna(lista.head, filas, 0), aplicar_caer_todas_columnas(lista.tail, filas))
   }
 
+  //función que a partir de la lista devuelta por aplicar_caer_todas_columnas, traspone la matriz que representaría
+  // para obtener la matriz final en el orden corecto de filas*columnas
   def caer_caramelos(matriz: List[Int], filas: Int, columnas: Int): List[Int] = {
     val listas = dividir_en_columnas(matriz, columnas)
     val caido_al_reves = aplicar_caer_todas_columnas(listas, filas)
@@ -190,6 +198,7 @@ object Main {
     caido_bien
   }
 
+  // cuenta el número de elementos=-1 de la matriz y lo devuelve
   def contador_borrados(matriz: List[Int],filas: Int, columnas: Int,posicion:Int=0): Int = {
     if (posicion== filas*columnas) 0
     else if (getElem(matriz,posicion) == -1) {
@@ -209,7 +218,7 @@ object Main {
     else rellenar_huecos(matriz, filas, columnas, posicion + 1, lim_inf, lim_sup)
   }
 
-
+// función que imprime la matriz con los colores correspondientes y en la disposición correspondiente a filas y columnas indicadas
   def imprimirMatriz(matriz: List[Int], n: Int, m: Int): Unit = {
     def imprimirFila(fila: List[Int]): Unit = {
       if (esVacia(fila)) {
@@ -245,15 +254,6 @@ object Main {
     }
   }
 
-  def imprimirListaDeListas(lista: List[List[Int]]): Unit = {
-    for (fila <- lista) {
-      for (elem <- fila) {
-        print(elem + " ")
-      }
-      println()
-    }
-  }
-
   //contamos cuantos caramelos iguales hay juntos
   def contar_adyacencias(matriz: List[Int], filas: Int, columnas: Int, filaObjetivo: Int, columnaObjetivo: Int, elemento: Int): Int = {
     val temporal = ver_candy(matriz, filas, columnas, filaObjetivo, columnaObjetivo, elemento)
@@ -262,6 +262,9 @@ object Main {
     contador_borrados(temporal, filas, columnas, 0)
   }
 
+  //función que nos devuelve las coordenadas de la mejor jugada
+  // por cada casilla, cuenta el número de elementos que serían borrados si fuese seleccionada
+  // y devuelve las coordenadas de la casilla que borre más elementos
   def mejores_coordenadas(matriz: List[Int], filas: Int, columnas: Int, mejor_fila: Int=0, mejor_columna: Int=0, fila_ini: Int=0, columna_ini: Int=0, valorMejorAdyacencia: Int = 0): (Int, Int) = {
     if (fila_ini == filas) (mejor_fila, mejor_columna)
     else if (columna_ini == columnas) mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini + 1, 0, valorMejorAdyacencia)
@@ -287,14 +290,16 @@ object Main {
       }
       else {
         val matriz_temporal = explotarRompecabezas(matriz, filas, columnas, elemento-8,0)
-        val borrados = contador_borrados(matriz_temporal, filas, columnas)
+        val borrados = contador_borrados(matriz_temporal, filas, columnas)+1
         if (borrados > valorMejorAdyacencia) mejores_coordenadas(matriz, filas, columnas, fila_ini, columna_ini, fila_ini, columna_ini + 1, borrados)
         else mejores_coordenadas(matriz, filas, columnas, mejor_fila, mejor_columna, fila_ini, columna_ini + 1, valorMejorAdyacencia)
       }
     }
   }
 
-
+// función que alberga el flujo del juego
+  // se encarga de comprobar el caramelo de la posición dada y de llamar a las funciones necesarias que desencadena la jugada
+  // Esas acciones actualizan la matriz y vuelve a llama a la función para que el usuario pueda seguir jugando
   def ejecutar_funcionalidad(matriz : List[Int],vidas:Int, filas:Int,columnas:Int,filaObjetivo:Int,columnaObjetivo:Int,modo: Int, dificultad: Int, lim_inf: Int, lim_sup: Int): Unit = {
 
     val posicion: Int = (filaObjetivo) * columnas + (columnaObjetivo)
@@ -363,7 +368,7 @@ object Main {
   }
 
 
-  //función principal que determina la posición a investigar ejecuta las acciones correspondientes
+  //función principal que determina la posición a investigar
   def jugar(matriz:List[Int], vidas: Int, modo: Int, dificultad: Int, filas: Int, columnas: Int, lim_inf: Int, lim_sup: Int): Unit = {
     imprimirMatriz(matriz, filas, columnas)
     println("\n\u001b[31mVIDAS: " + vidas + "\u001b[0m")
@@ -393,7 +398,6 @@ object Main {
       }
     }
   }
-
 
   def main(args: Array[String]): Unit = {
     //Obtencion de valores de modo de juego
