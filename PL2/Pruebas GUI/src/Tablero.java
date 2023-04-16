@@ -72,7 +72,30 @@ public class Tablero {
                 return new ImageIcon("imagenes/Azul.jpg");
             case "2":
                 return new ImageIcon("imagenes/Verde.jpg");
-            // y así para cada posible valor en el tablero
+            case "3":
+                return new ImageIcon("imagenes/Rojo.jpg");
+            case "4":
+                return new ImageIcon("imagenes/Amarillo.jpg");
+            case "5":
+                return new ImageIcon("imagenes/Morado.jpg");
+            case "6":
+                return new ImageIcon("imagenes/Naranja.jpg");
+            case "7":
+                return new ImageIcon("imagenes/bomba.jpg");
+            case "8":
+                return new ImageIcon("imagenes/tnt.jpg");
+            case "9":
+                return new ImageIcon("imagenes/r1.jpg");
+            case "10":
+                return new ImageIcon("imagenes/r2.jpg");
+            case "11":
+                return new ImageIcon("imagenes/r3.jpg");
+            case "12":
+                return new ImageIcon("imagenes/r4.jpg");
+            case "13":
+                return new ImageIcon("imagenes/r5.jpg");
+            case "14":
+                return new ImageIcon("imagenes/r6.jpg");
             default:
                 return null; // o una imagen por defecto en caso de que el valor no tenga una imagen asignada
         }
