@@ -15,6 +15,7 @@ public class Tablero {
     private int x;
     private int y;
     private static List<Object> matriz;
+    private Main clasePrincipal;
     JPanel Fondo;
     JTable tablero;
     private JLabel Prueba;
@@ -52,11 +53,29 @@ public class Tablero {
                 actualizarTablero(mat,fil,col);
             }
             else {
-                tablero.setValueAt(mat.head().toString(), fil, col);
+                ImageIcon imagen = obtenerImagenDesdeIndice(mat, fil, col);
+                tablero.setValueAt(imagen, fil, col);
+                System.out.println("llega aqui");
                 actualizarTablero((List<Object>) mat.tail(), fil, col+1);
             }
         }
     }
 
+
+    private ImageIcon obtenerImagenDesdeIndice(List<Object> mat, int fil,int col) {
+        // Lógica para obtener la imagen correspondiente al índice
+        // por ejemplo, con un switch:
+        int indice= fil*columnas+col;
+        Object elem= clasePrincipal.getElem(mat,indice);
+        switch (elem.toString()) {
+            case "1":
+                return new ImageIcon("imagenes/Azul.jpg");
+            case "2":
+                return new ImageIcon("imagenes/Verde.jpg");
+            // y así para cada posible valor en el tablero
+            default:
+                return null; // o una imagen por defecto en caso de que el valor no tenga una imagen asignada
+        }
+    }
 
 }
