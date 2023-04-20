@@ -4,8 +4,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.Graphics;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
@@ -40,11 +38,13 @@ public class Interfaz extends JFrame{
         Fondo = new JPanel() {
             private Image fondo = ImageIO.read(new File("src/imagenes/pared4.jpg"));
             {
+                //establecer el layout
                 setLayout(new GridBagLayout());
             }
 
             @Override
             public void paintComponent(Graphics g) {
+                //pintar el fondo
                 super.paintComponent(g);
                 g.drawImage(fondo, 0, 0, getWidth(), getHeight(), this);
             }
@@ -54,6 +54,7 @@ public class Interfaz extends JFrame{
         //Ajustes de componentes
         GridBagConstraints c = new GridBagConstraints();
 
+        //añadimos el título del juego
         c.gridx = 0;
         c.gridy = 0;
         c.fill = GridBagConstraints.CENTER; // Ocupa todas las celdas en ambas direcciones
@@ -98,6 +99,7 @@ public class Interfaz extends JFrame{
         c.insets = new Insets(20, 20, 20, 20);
         Fondo.add(NumeroFJL, c);
 
+        //modelo del spinner
         SpinnerModel filasModelo = new SpinnerNumberModel(1, 1, 200, 2);
         filasSpinner = new JSpinner(filasModelo);
 
@@ -176,6 +178,7 @@ public class Interfaz extends JFrame{
     public static void main(String[] args) throws IOException {
         JFrame frame = new JFrame("Cundy crosh soga");
         frame.setContentPane(new Interfaz().Fondo);
+        //ajustes de la ventana, visible, que se cierre y que se maximice
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);

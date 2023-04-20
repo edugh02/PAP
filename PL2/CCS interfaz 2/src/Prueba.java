@@ -20,11 +20,13 @@ public class Prueba extends JFrame{
     public JPanel panelSup = new JPanel() {
         private Image fondo = ImageIO.read(new File("src/imagenes/pared-rota2.png"));
         {
+            //establecer el layout
             setLayout(new GridBagLayout());
         }
 
         @Override
         public void paintComponent(Graphics g) {
+            //pintar el fondo
             super.paintComponent(g);
             g.drawImage(fondo, 0, 0, this.getWidth(), this.getHeight(), this);
         }
@@ -74,10 +76,10 @@ public class Prueba extends JFrame{
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         addComponentListener(new ComponentAdapter() {
             public void componentResized(ComponentEvent e) {
+                //hacer ventana de tamaño de la pantalla
                 setExtendedState(JFrame.MAXIMIZED_BOTH);
             }
         });
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setVisible(true);
 
         //Matriz auxiliar que se ira modificando
@@ -157,7 +159,7 @@ public class Prueba extends JFrame{
         c.insets = new Insets(20, 20, 20, 20);
         panelInf.add(Siguiente, c);
 
-        // Agregar panelSup a la ventana
+        // Agregar paneles a la ventana jframe
         add(panelSup, BorderLayout.CENTER);
         add(panelInf, BorderLayout.SOUTH);
 
@@ -318,11 +320,11 @@ public class Prueba extends JFrame{
                             colorLetra = colorFondo;
                             break;
                         case 2:
-                            colorFondo = Color.RED;
+                            colorFondo = new Color(238, 62, 62, 255);
                             colorLetra = colorFondo;
                             break;
                         case 3:
-                            colorFondo = new Color(180, 140, 200); // lila
+                            colorFondo = new Color(196, 15, 246, 255); // lila
                             colorLetra = colorFondo;
                             break;
                         case 4:
@@ -330,7 +332,7 @@ public class Prueba extends JFrame{
                             colorLetra = colorFondo;
                             break;
                         case 5:
-                            colorFondo = new Color(0, 0, 150); // azul oscuro
+                            colorFondo = new Color(0, 0, 229); // azul oscuro
                             colorLetra = colorFondo;
                             break;
                         case 6:
