@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="Interfaz">
+  <grid id="27dc6" binding="Fondo" layout-manager="GridLayoutManager" row-count="6" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+    <margin top="0" left="0" bottom="0" right="0"/>
+    <constraints>
+      <xy x="14" y="4" width="1841" height="441"/>
+    </constraints>
+    <properties>
+      <background color="-13663609"/>
+      <enabled value="true"/>
+      <visible value="true"/>
+    </properties>
+    <border type="none"/>
+    <children>
+      <component id="989aa" class="javax.swing.JComboBox" binding="dificultadComboBox">
+        <constraints>
+          <grid row="0" column="1" row-span="2" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-327681"/>
+          <editable value="false"/>
+          <enabled value="true"/>
+          <foreground color="-16777216"/>
+          <model>
+            <item value="Fácil"/>
+            <item value="Normal"/>
+          </model>
+        </properties>
+      </component>
+      <component id="ca7b3" class="javax.swing.JSpinner" binding="filasSpinner">
+        <constraints>
+          <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-13663609"/>
+          <enabled value="true"/>
+          <foreground color="-327681"/>
+        </properties>
+      </component>
+      <component id="ff4f" class="javax.swing.JComboBox" binding="modoComboBox">
+        <constraints>
+          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-327681"/>
+          <editable value="false"/>
+          <enabled value="true"/>
+          <foreground color="-16777216"/>
+          <model>
+            <item value="Automático"/>
+            <item value="Manual"/>
+          </model>
+        </properties>
+      </component>
+      <component id="fbe3f" class="javax.swing.JButton" binding="jugarButton" default-binding="true">
+        <constraints>
+          <grid row="5" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-7570586"/>
+          <enabled value="true"/>
+          <font name="Fira Code" size="14" style="1"/>
+          <foreground color="-327681"/>
+          <text value="Jugar"/>
+        </properties>
+      </component>
+      <component id="4b264" class="javax.swing.JLabel" binding="NumeroFJL">
+        <constraints>
+          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <autoscrolls value="false"/>
+          <background color="-10778228"/>
+          <doubleBuffered value="false"/>
+          <enabled value="true"/>
+          <focusCycleRoot value="false"/>
+          <focusTraversalPolicyProvider value="false"/>
+          <font name="Goudy Stout" size="48" style="1"/>
+          <foreground color="-1027"/>
+          <inheritsPopupMenu value="true"/>
+          <text value="Introduce el número de filas"/>
+          <visible value="true"/>
+        </properties>
+      </component>
+      <component id="44344" class="javax.swing.JLabel" binding="NumeroCJL">
+        <constraints>
+          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <autoscrolls value="false"/>
+          <background color="-10778228"/>
+          <doubleBuffered value="false"/>
+          <enabled value="true"/>
+          <focusCycleRoot value="false"/>
+          <focusTraversalPolicyProvider value="false"/>
+          <font name="Goudy Stout" size="48" style="1"/>
+          <foreground color="-1027"/>
+          <inheritsPopupMenu value="true"/>
+          <text value="Introduce el número de columnas"/>
+          <visible value="true"/>
+        </properties>
+      </component>
+      <component id="e4435" class="javax.swing.JLabel" binding="modoJL">
+        <constraints>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <autoscrolls value="false"/>
+          <background color="-10778228"/>
+          <doubleBuffered value="false"/>
+          <enabled value="true"/>
+          <focusCycleRoot value="false"/>
+          <focusTraversalPolicyProvider value="false"/>
+          <font name="Goudy Stout" size="48" style="1"/>
+          <foreground color="-1027"/>
+          <inheritsPopupMenu value="true"/>
+          <text value="Introcuce el modo de juego"/>
+          <visible value="true"/>
+        </properties>
+      </component>
+      <component id="e7e62" class="javax.swing.JSpinner" binding="columnasSpinner">
+        <constraints>
+          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-13663609"/>
+          <enabled value="true"/>
+          <foreground color="-327681"/>
+        </properties>
+      </component>
+      <component id="a84b1" class="javax.swing.JLabel" binding="dificultadJL">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <autoscrolls value="false"/>
+          <background color="-10778228"/>
+          <doubleBuffered value="false"/>
+          <enabled value="true"/>
+          <focusCycleRoot value="false"/>
+          <focusTraversalPolicyProvider value="false"/>
+          <font name="Goudy Stout" size="48" style="1"/>
+          <foreground color="-1027"/>
+          <inheritsPopupMenu value="true"/>
+          <text value="Introduce la dificultad"/>
+          <visible value="true"/>
+        </properties>
+      </component>
+      <component id="8fd60" class="javax.swing.JLabel" binding="Titulo">
+        <constraints>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-1027"/>
+          <enabled value="true"/>
+          <font name="Impact" size="96" style="1"/>
+          <foreground color="-1027"/>
+          <text value="DESTROZA-MUROS"/>
+        </properties>
+      </component>
+    </children>
+  </grid>
+</form>

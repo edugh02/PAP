@@ -1,8 +1,15 @@
 import scala.collection.immutable.List;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
 
 public class Tablero {
     private static int filas;
@@ -35,6 +42,8 @@ public class Tablero {
 
         // crea el JTable y establece el modelo
         tablero = new JTable(model);
+        tablero.setDefaultRenderer(Object.class, new ImgTabla());
+        tablero.setRowHeight(50);
         actualizarTablero(matriz,0,0);
     }
 
@@ -45,60 +54,119 @@ public class Tablero {
         tablero.setVisible(true);
     }
 
-    public void actualizarTablero(List<Object> mat,int fil,int col){
-        if (fil<filas) {
-            if (col==columnas) {
+    public void actualizarTablero(List<Object> mat, int fil, int col) {
+        if (fil < filas) {
+            if (col == columnas) {
                 fil++;
-                col=0;
-                actualizarTablero(mat,fil,col);
-            }
-            else {
-                ImageIcon imagen = obtenerImagenDesdeIndice(mat, fil, col);
-                tablero.setValueAt(imagen, fil, col);
-                System.out.println("llega aqui");
+                col = 0;
+                actualizarTablero(mat, fil, col);
+            } else {
+                ImageIcon imagen = obtenerImagenDesdeIndice(matriz, fil, col);
+                ImageLabel label = new ImageLabel(imagen);
+                label.setSize(50, 50);
+                label.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        // Aquí es donde colocas la acción que deseas que ocurra al hacer clic en el JLabel
+                        tablero.setVisible(false);
+                    }
+                });
+
+                tablero.setValueAt(label, fil, col);
                 actualizarTablero((List<Object>) mat.tail(), fil, col+1);
             }
         }
     }
 
 
-    private ImageIcon obtenerImagenDesdeIndice(List<Object> mat, int fil,int col) {
+
+    private ImageIcon obtenerImagenDesdeIndice(List<Object> mat, int fil, int col) {
         // Lógica para obtener la imagen correspondiente al índice
         // por ejemplo, con un switch:
-        int indice= fil*columnas+col;
-        Object elem= clasePrincipal.getElem(mat,indice);
+        int indice = fil * columnas + col;
+        Object elem = clasePrincipal.getElem(mat, indice);
+        String ruta = "";
         switch (elem.toString()) {
             case "1":
-                return new ImageIcon("imagenes/Azul.jpg");
+                ruta = "src/imagenes/Azul.jpg";
+                break;
             case "2":
-                return new ImageIcon("imagenes/Verde.jpg");
+                ruta = "src/imagenes/Verde.jpg";
+                break;
             case "3":
-                return new ImageIcon("imagenes/Rojo.jpg");
+                ruta = "src/imagenes/Rojo.jpg";
+                break;
             case "4":
-                return new ImageIcon("imagenes/Amarillo.jpg");
+                ruta = "src/imagenes/Amarillo.jpg";
+                break;
             case "5":
-                return new ImageIcon("imagenes/Morado.jpg");
+                ruta = "src/imagenes/Morado.jpg";
+                break;
             case "6":
-                return new ImageIcon("imagenes/Naranja.jpg");
+                ruta = "src/imagenes/Naranja.jpg";
+                break;
             case "7":
-                return new ImageIcon("imagenes/bomba.jpg");
+                ruta = "src/imagenes/bomba.jpg";
+                break;
             case "8":
-                return new ImageIcon("imagenes/tnt.jpg");
+                ruta = "src/imagenes/tnt.jpg";
+                break;
             case "9":
-                return new ImageIcon("imagenes/r1.jpg");
+                ruta = "src/imagenes/r1.jpg";
+                break;
             case "10":
-                return new ImageIcon("imagenes/r2.jpg");
+                ruta = "src/imagenes/r2.jpg";
+                break;
             case "11":
-                return new ImageIcon("imagenes/r3.jpg");
+                ruta = "src/imagenes/r3.jpg";
+                break;
             case "12":
-                return new ImageIcon("imagenes/r4.jpg");
+                ruta = "src/imagenes/r4.jpg";
+                break;
             case "13":
-                return new ImageIcon("imagenes/r5.jpg");
+                ruta = "src/imagenes/r5.jpg";
+                break;
             case "14":
-                return new ImageIcon("imagenes/r6.jpg");
+                ruta = "src/imagenes/r6.jpg";
+                break;
             default:
-                return null; // o una imagen por defecto en caso de que el valor no tenga una imagen asignada
+                // en caso de que el valor no tenga una imagen asignada
+                return null; // o una imagen por defecto
+        }
+        try {
+            ImageIcon icon = new ImageIcon(ImageIO.read(new File(ruta)));
+            Image imagen = icon.getImage();
+            Image nuevaImagen = imagen.getScaledInstance(50, 50, Image.SCALE_SMOOTH);
+            ImageIcon nuevaIcon = new ImageIcon(nuevaImagen);
+            return nuevaIcon;
+        } catch (IOException e) {
+            // en caso de que ocurra una excepción al leer la imagen
+            e.printStackTrace();
+            return null; // o una imagen por defecto
         }
     }
+
+
+    public class ImgTabla extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent (JTable jtable, Object o , boolean bln, boolean bln1, int i, int i1) {
+            if (o instanceof JLabel) {
+                JLabel Ibl = (JLabel) o;
+                return Ibl;
+            }
+                return super.getTableCellRendererComponent (jtable, o, bln, bln1, i, i1);
+
+
+        }
+    }
+
+    public class ImageLabel extends JLabel {
+
+        public ImageLabel(ImageIcon icon) {
+            super(icon);
+        }
+    }
+
+
 
 }
