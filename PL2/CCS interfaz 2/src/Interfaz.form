@@ -3,7 +3,7 @@
   <grid id="27dc6" binding="Fondo" layout-manager="GridLayoutManager" row-count="6" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="0" left="0" bottom="0" right="0"/>
     <constraints>
-      <xy x="14" y="4" width="1841" height="441"/>
+      <xy x="14" y="4" width="1855" height="441"/>
     </constraints>
     <properties>
       <background color="-13663609"/>
@@ -75,7 +75,7 @@
           <enabled value="true"/>
           <focusCycleRoot value="false"/>
           <focusTraversalPolicyProvider value="false"/>
-          <font name="Goudy Stout" size="48" style="1"/>
+          <font name="Goudy Stout" size="36" style="1"/>
           <foreground color="-1027"/>
           <inheritsPopupMenu value="true"/>
           <text value="Introduce el número de filas"/>
@@ -93,7 +93,7 @@
           <enabled value="true"/>
           <focusCycleRoot value="false"/>
           <focusTraversalPolicyProvider value="false"/>
-          <font name="Goudy Stout" size="48" style="1"/>
+          <font name="Goudy Stout" size="36" style="1"/>
           <foreground color="-1027"/>
           <inheritsPopupMenu value="true"/>
           <text value="Introduce el número de columnas"/>
@@ -111,7 +111,7 @@
           <enabled value="true"/>
           <focusCycleRoot value="false"/>
           <focusTraversalPolicyProvider value="false"/>
-          <font name="Goudy Stout" size="48" style="1"/>
+          <font name="Goudy Stout" size="36" style="1"/>
           <foreground color="-1027"/>
           <inheritsPopupMenu value="true"/>
           <text value="Introcuce el modo de juego"/>
@@ -139,7 +139,7 @@
           <enabled value="true"/>
           <focusCycleRoot value="false"/>
           <focusTraversalPolicyProvider value="false"/>
-          <font name="Goudy Stout" size="48" style="1"/>
+          <font name="Goudy Stout" size="36" style="1"/>
           <foreground color="-1027"/>
           <inheritsPopupMenu value="true"/>
           <text value="Introduce la dificultad"/>
