@@ -86,7 +86,7 @@ public class Prueba extends JFrame{
         aux = matriz;
 
         //Inicializacion del JTable
-        DefaultTableModel model = setModelo(aux, 0, 0);
+        DefaultTableModel model = setModelo();
         matrix.setModel(model);
 
 
@@ -181,7 +181,7 @@ public class Prueba extends JFrame{
 
                 //Actualizacion del JTable
                 aux=clasePrincipal.actualizarMatriz(aux,vidas,filas,columnas,cordx,cordy,modo,dificultad,limiteInferior,limiteSuperior);
-                matrix.setModel(setModelo(aux, 0, 0));
+                matrix.setModel(setModelo());
                 actualizarTablero(aux, 0, 0);
 
                 if (vidRest==0){
@@ -229,7 +229,7 @@ public class Prueba extends JFrame{
 
                             //Actualizacion del JTable
                             aux=clasePrincipal.actualizarMatriz(aux,vidas,filas,columnas,cordx,cordy,modo,dificultad,limiteInferior,limiteSuperior);
-                            matrix.setModel(setModelo(aux, 0, 0));
+                            matrix.setModel(setModelo());
                             actualizarTablero(aux, 0, 0);
                         }
 
@@ -239,41 +239,16 @@ public class Prueba extends JFrame{
         });
     }
 
-    public DefaultTableModel setModelo(List<Object> mat, int fil, int col) {
+    public DefaultTableModel setModelo() {
         DefaultTableModel model = new DefaultTableModel(filas, columnas) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
-//Comprobacion para que no se salga de los limites
-        if (fil < filas && col < columnas) {
-            //Obtencion del elemento a insertar
-            int elemento = (int) clasePrincipal.getElem(mat, fil * columnas + col);
-
-            //Comprobacion de que tipo es el elemento
-            if (elemento < 7) {
-                model.setValueAt(elemento, fil, col);
-            } else if (elemento == 7) {
-                model.setValueAt("Bomba", fil, col);
-            } else if (elemento == 8) {
-                model.setValueAt("TNT", fil, col);
-            } else if (elemento == 9) {
-                model.setValueAt("R1", fil, col);
-            } else if (elemento == 10) {
-                model.setValueAt("R2", fil, col);
-            } else if (elemento == 11) {
-                model.setValueAt("R3", fil, col);
-            } else if (elemento == 12) {
-                model.setValueAt("R4", fil, col);
-            } else if (elemento == 13) {
-                model.setValueAt("R5", fil, col);
-            } else if (elemento == 14) {
-                model.setValueAt("R6", fil, col);
-            }
-        }
         return model;
     }
+
     public void actualizarTablero(List<Object> mat, int fil, int col)
     {
         //Comprobacion para que no se salga de los limites
