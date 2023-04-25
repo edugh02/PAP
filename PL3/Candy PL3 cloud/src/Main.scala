@@ -297,6 +297,44 @@ object Main {
     }
   }
 
+  def contarPuntuacion(matriz : List[Int], filas:Int, columnas:Int, modo: Int, puntuacion: Int, elemento: Int): Int={
+    if (elemento<7) {
+      val borrados = contador_borrados(matriz, filas, columnas, 0)
+      val puntuacionActualizada1 = puntuacion + borrados
+      if((borrados>9)){
+        val puntuacionActualizada2 = puntuacionActualizada1 + borrados/10
+        puntuacionActualizada2 *modo
+      }else puntuacionActualizada1 *modo
+    }
+    else if (elemento==7) {
+      val borrados = contador_borrados(matriz, filas, columnas, 0)
+      val puntuacionActualizada1 = puntuacion + borrados +5
+      if ((borrados > 9)) {
+        val puntuacionActualizada2 = puntuacionActualizada1 + borrados / 10
+        puntuacionActualizada2 *modo
+      } else puntuacionActualizada1 *modo
+    }
+    else if (elemento==8){
+      val borrados = contador_borrados(matriz, filas, columnas, 0)
+      val puntuacionActualizada1 = puntuacion + borrados +10
+      if ((borrados > 9)) {
+        val puntuacionActualizada2 = puntuacionActualizada1 + borrados / 10
+        puntuacionActualizada2 *modo
+      } else puntuacionActualizada1 *modo
+    }
+    else {
+      println("entra 4")
+      val borrados = contador_borrados(matriz, filas, columnas, 0)
+      val puntuacionActualizada1 = puntuacion + borrados +15
+      if ((borrados > 9)) {
+        println("entra 4.4")
+        val puntuacionActualizada2 = puntuacionActualizada1 + borrados / 10
+        puntuacionActualizada2 *modo
+      } else puntuacionActualizada1 *modo
+    }
+
+  }
+
   // función que alberga el flujo del juego
   // se encarga de comprobar el caramelo de la posición dada y de llamar a las funciones necesarias que desencadena la jugada
   // Esas acciones actualizan la matriz y vuelve a llama a la función para que el usuario pueda seguir jugando
@@ -311,7 +349,7 @@ object Main {
       val contador = contador_borrados(matrizElementosBorrados, filas, columnas, 0)
       if (contador == 1) {
         val candys_caidos = caer_caramelos(matrizElementosBorrados, filas, columnas)
-        val puntuacionActualizada = contador_borrados(candys_caidos, filas, columnas, 0)*100 + puntuacion
+        val puntuacionActualizada = contarPuntuacion(candys_caidos, filas, columnas, modo, puntuacion, elemento)
         val nuevaMatriz_menosvida = rellenar_huecos(candys_caidos, filas, columnas, 0, lim_inf, lim_sup)
         jugar(nuevaMatriz_menosvida, vidas - 1, modo, dificultad, filas, columnas, lim_inf, lim_sup, puntuacionActualizada)
       }
@@ -319,15 +357,15 @@ object Main {
         //Se forma Bomba
         val matrizB = reemplazarEnPosicion(matrizElementosBorrados, filaObjetivo * columnas + columnaObjetivo, 7)
         val candys_caidos = caer_caramelos(matrizB, filas, columnas)
-        val puntuacionActualizada = contador_borrados(candys_caidos, filas, columnas, 0)*100 + puntuacion
+        val puntuacionActualizada = contarPuntuacion(candys_caidos, filas, columnas, modo, puntuacion, elemento)
         val nuevaMatrizB = rellenar_huecos(candys_caidos, filas, columnas, 0, lim_inf, lim_sup)
         jugar(nuevaMatrizB, vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup, puntuacionActualizada)
       }
       else if (contador == 6) {
         // se froma TNT
         val matrizTNT = reemplazarEnPosicion(matrizElementosBorrados, filaObjetivo * columnas + columnaObjetivo, 8)
+        val puntuacionActualizada = contarPuntuacion(matrizTNT, filas, columnas, modo, puntuacion, elemento)
         val candys_caidos = caer_caramelos(matrizTNT, filas, columnas)
-        val puntuacionActualizada = contador_borrados(candys_caidos, filas, columnas, 0)*100 + puntuacion
         val nuevaMatrizTNT = rellenar_huecos(candys_caidos, filas, columnas, 0, lim_inf, lim_sup)
         jugar(nuevaMatrizTNT, vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup, puntuacionActualizada)
       }
@@ -336,15 +374,15 @@ object Main {
         val random = new Random()
         val rx: Int = random.nextInt(lim_sup) + 9
         val matrizRx = reemplazarEnPosicion(matrizElementosBorrados, filaObjetivo * columnas + columnaObjetivo, rx)
+        val puntuacionActualizada = contarPuntuacion(matrizRx, filas, columnas, modo, puntuacion, elemento)
         val candys_caidos = caer_caramelos(matrizRx, filas, columnas)
-        val puntuacionActualizada = contador_borrados(candys_caidos, filas, columnas, 0)*100 + puntuacion
         val nuevaMatrizRx = rellenar_huecos(candys_caidos, filas, columnas, 0, lim_inf, lim_sup)
         jugar(nuevaMatrizRx, vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup, puntuacionActualizada)
       }
       else {
         //de 2 a 4
         val candys_caidos = caer_caramelos(matrizElementosBorrados, filas, columnas)
-        val puntuacionActualizada = contador_borrados(candys_caidos, filas, columnas, 0)*100 + puntuacion
+        val puntuacionActualizada = contarPuntuacion(candys_caidos, filas, columnas, modo, puntuacion, elemento)
         val nuevaMatriz = rellenar_huecos(candys_caidos, filas, columnas, 0, lim_inf, lim_sup)
         jugar(nuevaMatriz, vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup, puntuacionActualizada)
       }
@@ -353,7 +391,7 @@ object Main {
       val matrizBombaExplotada = explotarBomba(matriz, filas, columnas, filaObjetivo, columnaObjetivo)
       imprimirMatriz(matrizBombaExplotada, filas, columnas)
       val candys_caidos = caer_caramelos(matrizBombaExplotada, filas, columnas)
-      val puntuacionActualizada = contador_borrados(candys_caidos, filas, columnas, 0)*100 + puntuacion
+      val puntuacionActualizada = contarPuntuacion(candys_caidos, filas, columnas, modo, puntuacion, elemento)
       val matrizBombaExplotada_rellenada = rellenar_huecos(candys_caidos, filas, columnas, 0, lim_inf, lim_sup)
       jugar(matrizBombaExplotada_rellenada, vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup, puntuacionActualizada)
     }
@@ -361,7 +399,7 @@ object Main {
       val matrizTNTExplotada = explotarTNT(matriz, filas, columnas, filaObjetivo, columnaObjetivo, 0, 0)
       imprimirMatriz(matrizTNTExplotada, filas, columnas)
       val candys_caidos = caer_caramelos(matrizTNTExplotada, filas, columnas)
-      val puntuacionActualizada = contador_borrados(candys_caidos, filas, columnas, 0)*100 + puntuacion
+      val puntuacionActualizada = contarPuntuacion(candys_caidos, filas, columnas, modo, puntuacion, elemento)
       val matrizTNTExplotada_rellenada = rellenar_huecos(candys_caidos, filas, columnas, 0, lim_inf, lim_sup)
       jugar(matrizTNTExplotada_rellenada, vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup, puntuacionActualizada)
     }
@@ -370,7 +408,7 @@ object Main {
       val matriz_sin_rx = reemplazarEnPosicion(matrizRompecabezasExplotada, filaObjetivo * columnas + columnaObjetivo, -1)
       imprimirMatriz(matriz_sin_rx, filas, columnas)
       val candys_caidos = caer_caramelos(matriz_sin_rx, filas, columnas)
-      val puntuacionActualizada = contador_borrados(candys_caidos, filas, columnas, 0)*100 + puntuacion
+      val puntuacionActualizada = contarPuntuacion(candys_caidos, filas, columnas, modo, puntuacion, elemento)
       val matrizRompecabezasExplotada_rellenada = rellenar_huecos(candys_caidos, filas, columnas, 0, lim_inf, lim_sup)
       jugar(matrizRompecabezasExplotada_rellenada, vidas, modo, dificultad, filas, columnas, lim_inf, lim_sup, puntuacionActualizada)
     }
